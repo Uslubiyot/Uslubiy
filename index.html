@@ -1166,12 +1166,17 @@ document.addEventListener('click', function(e){
 });
 
 // Guruh yilidan kurs hisoblash
+// Qo'llab-quvvatlanadigan formatlar:
+//   Kunduzgi: "1-25 IQT", "1A-25 MT", "2-25 JIM"
+//   Sirtqi:   "S1-24 PSI", "S2-23 IQT"
+//   Magistr:  "M1-25 IQT", "M2-24 PSI"
 function getKurs(guruhNomi, oquvYili){
-  // Guruh nomi: "1-25 IQT" → yil = 25 → 2025
-  const match = guruhNomi.match(/\d+-(\d{2})/);
+  // Har qanday prefiksdan keyin raqam-YY formatini topamiz
+  // Masalan: "S1-24 PSI" → 24, "M1-25 IQT" → 25, "1A-25 MT" → 25, "1-25 IQT" → 25
+  const match = guruhNomi.match(/[A-Za-z]*\d+[A-Za-z]*-(\d{2})/);
   if(!match) return null;
   const kirganYil = 2000 + parseInt(match[1]);
-  const oquvYilBoshi = parseInt(oquvYili.split('-')[0]);
+  const oquvYilBoshi = parseInt(oquvYili.split(/[-–]/)[0]);
   return oquvYilBoshi - kirganYil + 1;
 }
 
@@ -1218,29 +1223,42 @@ function getFanlarFromReja(oquvYili, talimTuri, semestrNum){
 
 // Guruhlarni tayyorlash
 function getGuruhlar(oquvYili, talimTuri){
-  // Talabalar bazasidan yoki demo data
   const guruhlar = [];
-  const yilBoshi = parseInt(oquvYili.split('-')[0]);
 
   if(talabalarBazasi.length > 0){
-    // XLSX dan
+    // XLSX dan — ta'lim turiga qarab filtrlash
+    // Kunduzgi: prefikssiz (1-25 IQT, 1A-25 MT)
+    // Sirtqi:   S harfi bilan boshlanadi (S1-24 PSI)
+    // Magistratura: M harfi bilan boshlanadi (M1-25 IQT)
     const seen = {};
     talabalarBazasi.forEach(t => {
       if(!t.guruh) return;
-      const k = getKurs(t.guruh, oquvYili);
-      if(!k || k < 1 || k > 8) return;
-      if(!seen[t.guruh]){
-        seen[t.guruh] = {nomi: t.guruh, talabaSoni: 0, kurs: k};
-        guruhlar.push(seen[t.guruh]);
+
+      // Ta'lim turiga ko'ra guruhni filtrlash
+      const g = t.guruh.trim();
+      const isSirtqi     = /^S\d/i.test(g);
+      const isMagistr    = /^M\d/i.test(g);
+      const isKunduzgi   = !isSirtqi && !isMagistr;
+
+      if(talimTuri === 'Sirtqi'      && !isSirtqi)   return;
+      if(talimTuri === 'Magistratura'&& !isMagistr)  return;
+      if(talimTuri === 'Kunduzgi'    && !isKunduzgi) return;
+
+      const k = getKurs(g, oquvYili);
+      if(!k || k < 1 || k > 10) return;
+
+      if(!seen[g]){
+        seen[g] = {nomi: g, talabaSoni: 0, kurs: k};
+        guruhlar.push(seen[g]);
       }
-      seen[t.guruh].talabaSoni++;
+      seen[g].talabaSoni++;
     });
   } else {
     // Demo
     return [{nomi: 'Demo guruh', talabaSoni: 25, kurs: 1}];
   }
 
-  return guruhlar.sort((a,b) => a.nomi.localeCompare(b.nomi));
+  return guruhlar.sort((a,b) => a.kurs - b.kurs || a.nomi.localeCompare(b.nomi));
 }
 
 window.loadMavsumiy = function loadMavsumiy(){
@@ -1340,7 +1358,7 @@ window.loadMavsumiy = function loadMavsumiy(){
   }
 }
 
-// XLSX yuklash
+// XLSX yuklash — barcha sheetlarni o'qiydi
 window.loadXLSX = function loadXLSX(input){
   const file = input.files[0];
   if(!file) return;
@@ -1349,44 +1367,48 @@ window.loadXLSX = function loadXLSX(input){
     try {
       const data = new Uint8Array(e.target.result);
       const workbook = XLSX.read(data, {type:'array'});
-      const sheet = workbook.Sheets[workbook.SheetNames[0]];
-      const json = XLSX.utils.sheet_to_json(sheet, {header:1});
-      
+
       talabalarBazasi = [];
-      // Sarlavhani topamiz
-      let headerRow = -1;
-      for(let i=0;i<json.length;i++){
-        if(json[i] && json[i].some(c=>String(c||'').toLowerCase().includes('guruh'))){
-          headerRow = i; break;
-        }
-      }
-      
-      if(headerRow < 0){
-        alert('Guruh ustuni topilmadi!'); return;
-      }
-      
-      const headers = json[headerRow].map(h=>String(h||'').toLowerCase());
-      const guruhIdx = headers.findIndex(h=>h.includes('guruh'));
-      const talabaSoniIdx = headers.findIndex(h=>h.includes('talaba') && h.includes('soni'));
-      
-      for(let i=headerRow+1;i<json.length;i++){
-        const row = json[i];
-        if(!row || !row[guruhIdx]) continue;
-        const guruh = String(row[guruhIdx]).trim();
-        if(!guruh || guruh.toLowerCase().includes('jami')) continue;
-        
-        if(talabaSoniIdx >= 0 && row[talabaSoniIdx]){
-          // Guruh rahbari jadvali — har guruh bir qator
-          const soni = parseInt(row[talabaSoniIdx])||0;
-          for(let s=0;s<soni;s++){
-            talabalarBazasi.push({guruh});
+      let jami = 0;
+
+      // Barcha sheetlarni o'qiymiz
+      workbook.SheetNames.forEach(sheetName => {
+        const sheet = workbook.Sheets[sheetName];
+        const json = XLSX.utils.sheet_to_json(sheet, {header:1});
+
+        // Sarlavha qatorini topamiz
+        let headerRow = -1;
+        for(let i = 0; i < json.length; i++){
+          if(json[i] && json[i].some(c => String(c||'').toLowerCase().includes('guruh'))){
+            headerRow = i; break;
           }
-        } else {
-          talabalarBazasi.push({guruh});
         }
-      }
-      
-      alert(talabalarBazasi.length + ' ta talaba ma\'lumoti yuklandi!');
+        if(headerRow < 0) return; // Bu sheetda guruh ustuni yo'q
+
+        const headers = json[headerRow].map(h => String(h||'').toLowerCase());
+        const guruhIdx      = headers.findIndex(h => h.includes('guruh'));
+        const talabaSoniIdx = headers.findIndex(h => h.includes('talaba') && h.includes('soni'));
+        if(guruhIdx < 0) return;
+
+        for(let i = headerRow + 1; i < json.length; i++){
+          const row = json[i];
+          if(!row || row[guruhIdx] === undefined || row[guruhIdx] === null || row[guruhIdx] === '') continue;
+          const guruh = String(row[guruhIdx]).trim();
+          // Bo'sh, "Jami", yoki kurs sarlavhasi qatorlarini o'tkazib yuboramiz
+          if(!guruh || /^jami/i.test(guruh) || /^\d+-kurs/i.test(guruh) || /kurs$/i.test(guruh)) continue;
+          // Faqat guruh kabi ko'rinadigan qatorlar (harf yoki raqam bilan boshlansin)
+          if(!/^[A-Za-zА-Яа-яЎўҚқҒғҲҳ\d]/.test(guruh)) continue;
+
+          const soni = (talabaSoniIdx >= 0 && row[talabaSoniIdx]) ? (parseInt(row[talabaSoniIdx])||1) : 1;
+
+          for(let s = 0; s < soni; s++){
+            talabalarBazasi.push({guruh});
+            jami++;
+          }
+        }
+      });
+
+      alert(jami + ' ta talaba ma\'lumoti yuklandi! (' + workbook.SheetNames.join(', ') + ')');
       loadMavsumiy();
     } catch(err){
       alert('XLSX o\'qishda xato: ' + err.message);
