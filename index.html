@@ -1,0 +1,1828 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BXU AkademPlatform — O'quv reja</title>
+
+<style>
+:root{
+  --primary:#0ea5e9;--primary-dark:#0284c7;--primary-light:#e0f2fe;--primary-mid:#bae6fd;
+  --accent:#0369a1;--sidebar-bg:#0a1628;--sidebar-hover:#0f2540;
+  --bg:#f0f9ff;--surface:#ffffff;--border:#bae6fd;--border-dark:#7dd3fc;
+  --text:#0c2340;--text-muted:#475569;--text-light:#94a3b8;
+  --auto-bg:#fef3c7;--auto-text:#92400e;--fixed-bg:#f1f5f9;--fixed-text:#94a3b8;
+  --radius:10px;--radius-sm:6px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Tahoma,Arial,sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh;font-size:14px}
+
+.sidebar{width:260px;min-width:260px;background:var(--sidebar-bg);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;transition:transform 0.25s ease;}
+.sidebar.collapsed{transform:translateX(-260px);}
+.main{transition:margin-left 0.25s ease;}
+.main.expanded{margin-left:0;}
+.sidebar-toggle{position:fixed;top:14px;left:14px;z-index:101;width:36px;height:36px;border-radius:8px;background:var(--primary);border:none;cursor:pointer;display:none;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.2);}
+.sidebar-toggle.show{display:flex;}
+.sidebar-toggle svg{width:18px;height:18px;color:#fff;}
+.sidebar-logo{padding:20px 20px 16px;border-bottom:1px solid rgba(255,255,255,0.07)}
+.logo-text{font-size:17px;font-weight:700;color:#fff;letter-spacing:-0.3px}
+.logo-text span{color:var(--primary)}
+.logo-sub{font-size:10px;color:rgba(255,255,255,0.4);margin-top:4px;letter-spacing:0.04em;text-transform:uppercase}
+.nav{flex:1;padding:8px 0;overflow-y:auto}
+.nav-label{font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:rgba(255,255,255,0.25);padding:12px 20px 5px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:11px 20px;color:rgba(255,255,255,0.55);cursor:pointer;border-left:3px solid transparent;font-size:14px;transition:all 0.15s}
+.nav-item:hover{background:var(--sidebar-hover);color:rgba(255,255,255,0.9)}
+.nav-item.active{background:rgba(14,165,233,0.15);color:var(--primary);border-left-color:var(--primary);font-weight:500}
+.nav-item svg{width:17px;height:17px;flex-shrink:0}
+.sidebar-footer{padding:14px 20px;border-top:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;gap:9px}
+.avatar{width:36px;height:36px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0}
+.u-name{font-size:13px;color:#fff;font-weight:600}
+.u-role{font-size:10px;color:rgba(255,255,255,0.4)}
+
+.main{margin-left:260px;flex:1;display:flex;flex-direction:column;min-height:100vh}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;height:58px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.breadcrumb{font-size:11px;color:var(--text-light)}
+.breadcrumb span{color:var(--primary);font-weight:500;cursor:pointer}
+.breadcrumb span:hover{text-decoration:underline}
+.page-title{font-size:16px;font-weight:600;color:var(--text)}
+.topbar-right{display:flex;align-items:center;gap:8px}
+.badge{font-size:11px;padding:3px 10px;border-radius:20px;background:var(--primary-light);color:var(--accent);border:1px solid var(--primary-mid);font-weight:500}
+
+.content{padding:20px;flex:1}
+.page{display:none}.page.active{display:block}
+
+/* PAPKALAR */
+.top-actions{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.top-actions h2{font-size:15px;font-weight:600}
+.btn-new{display:flex;align-items:center;gap:6px;background:var(--primary);color:#fff;border:none;border-radius:var(--radius-sm);padding:8px 16px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:background 0.15s}
+.btn-new:hover{background:var(--primary-dark)}
+.years-list{display:flex;flex-direction:column;gap:10px}
+.year-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.06);transition:box-shadow 0.2s}
+.year-card-header{display:flex;align-items:center;justify-content:space-between;padding:11px 15px;cursor:pointer;user-select:none;transition:background 0.15s}
+.year-card-header:hover,.year-card-header.open{background:var(--primary-light)}
+.year-card-title{display:flex;align-items:center;gap:9px;font-weight:600;font-size:13px}
+.year-card-title svg{width:16px;height:16px;color:var(--primary)}
+.year-count{font-size:10px;color:var(--text-light);background:var(--bg);border:1px solid var(--border);padding:2px 7px;border-radius:20px}
+.chevron{width:15px;height:15px;color:var(--text-light);transition:transform 0.2s}
+.chevron.open{transform:rotate(180deg)}
+.year-body{display:none;padding:0 15px 14px}.year-body.open{display:block}
+.talim-group{margin-top:11px}
+.talim-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-light);margin-bottom:7px;padding-bottom:5px;border-bottom:1px solid var(--border)}
+.reja-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:7px}
+.reja-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 11px;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.reja-card:hover{border-color:var(--primary);background:var(--primary-light);transform:translateY(-1px);box-shadow:0 4px 12px rgba(14,165,233,0.15)}
+.reja-card-name{font-size:12px;font-weight:500}
+.reja-card-sub{font-size:10px;color:var(--text-light);margin-top:2px}
+.reja-card svg{width:13px;height:13px;color:var(--primary);flex-shrink:0}
+.tag-k{background:#dbeafe;color:#1e40af;font-size:10px;padding:1px 6px;border-radius:20px}
+.tag-s{background:#dcfce7;color:#166534;font-size:10px;padding:1px 6px;border-radius:20px}
+.tag-m{background:#fef3c7;color:#92400e;font-size:10px;padding:1px 6px;border-radius:20px}
+.empty-state{text-align:center;padding:44px;color:var(--text-light)}
+.empty-state svg{margin:0 auto 10px;display:block;opacity:0.35}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:200;display:none;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:var(--radius);padding:26px;width:400px;max-width:95vw}
+.modal h3{font-size:14px;font-weight:600;margin-bottom:18px}
+.field{margin-bottom:13px}
+.field label{display:block;font-size:11px;font-weight:500;color:var(--text-muted);margin-bottom:4px}
+.field select,.field input[type=text]{width:100%;border:1.5px solid var(--border-dark);border-radius:var(--radius-sm);padding:8px 11px;font-size:12px;font-family:inherit;color:var(--text);background:#fff;transition:border-color 0.15s}
+.field select:focus,.field input[type=text]:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(14,165,233,0.1)}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:18px}
+.btn-cancel{background:none;border:1px solid var(--border-dark);border-radius:var(--radius-sm);padding:7px 14px;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;color:var(--text-muted)}
+.btn-cancel:hover{background:var(--bg)}
+.btn-create{background:var(--primary);color:#fff;border:none;border-radius:var(--radius-sm);padding:7px 16px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
+.btn-create:hover{background:var(--primary-dark)}
+
+/* JADVAL */
+.jadval-topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px}
+.jadval-info{display:flex;align-items:center;gap:10px}
+.jadval-title{font-size:17px;font-weight:600}
+.jadval-sub{font-size:11px;color:var(--text-light);margin-top:2px}
+.back-btn{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--primary);cursor:pointer;background:none;border:none;font-family:inherit;font-weight:500;padding:0}
+.back-btn:hover{text-decoration:underline}
+.back-btn svg{width:13px;height:13px}
+.btn-save{background:var(--primary);color:#fff;border:none;border-radius:var(--radius-sm);padding:8px 16px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:background 0.15s;display:flex;align-items:center;gap:5px}
+.btn-save:hover{background:var(--primary-dark)}
+
+/* TA'LIM TURI TABS */
+.talim-tabs{display:flex;gap:6px;margin-bottom:18px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:5px;width:fit-content}
+.talim-tab{padding:6px 16px;border-radius:var(--radius-sm);font-size:12px;font-weight:500;cursor:pointer;color:var(--text-muted);transition:all 0.15s;border:none;background:none;font-family:inherit}
+.talim-tab:hover{background:var(--primary-light);color:var(--accent)}
+.talim-tab.active{background:var(--primary);color:#fff}
+
+.summary-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px}
+.sum-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;border-top:3px solid var(--primary)}
+.sum-label{font-size:10px;color:var(--text-light);margin-bottom:3px}
+.sum-value{font-size:22px;font-weight:600;font-family:'Segoe UI',Tahoma,Arial,sans-serif}
+.sum-sub{font-size:10px;color:var(--text-light);margin-top:1px}
+
+.formula-legend{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:14px;padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);align-items:center;font-size:11px;color:var(--text-muted)}
+.fdot{width:9px;height:9px;border-radius:2px;flex-shrink:0}
+.dot-auto{background:var(--auto-bg);border:1px solid #fcd34d}
+.dot-manual{background:#fff;border:1px solid var(--border-dark)}
+.dot-fixed{background:var(--fixed-bg);border:1px solid #e2e8f0}
+.fi{display:flex;align-items:center;gap:5px}
+
+.block{margin-bottom:24px;border-radius:var(--radius);box-shadow:0 2px 12px rgba(0,0,0,0.08);overflow:hidden}
+.block-header{display:flex;align-items:center;justify-content:space-between;padding:11px 16px;background:linear-gradient(135deg,var(--primary) 0%,var(--primary-dark) 100%);border-radius:var(--radius) var(--radius) 0 0;color:#fff}
+.block-header.tanlov{background:linear-gradient(135deg,#0369a1 0%,#0284c7 100%)}
+.block-header.amaliyot{background:linear-gradient(135deg,#0e7490 0%,#0891b2 100%)}
+.block-header.bmi-h{background:linear-gradient(135deg,#164e63 0%,#155e75 100%)}
+.bhl{display:flex;align-items:center;gap:7px}
+.bhl svg{width:15px;height:15px;opacity:0.85}
+.btxt{font-size:14px;font-weight:700;letter-spacing:-0.2px}
+.btag{font-size:10px;padding:2px 7px;border-radius:20px;background:rgba(255,255,255,0.18);color:rgba(255,255,255,0.9)}
+.btn-add{display:flex;align-items:center;gap:4px;font-size:11px;padding:5px 10px;border-radius:var(--radius-sm);background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.25);cursor:pointer;font-family:inherit;font-weight:500;transition:background 0.15s}
+.btn-add:hover{background:rgba(255,255,255,0.25)}
+.btn-add svg{width:11px;height:11px}
+
+.table-wrap{overflow-x:auto;border:1px solid #b0bec5;border-top:none;border-radius:0 0 var(--radius) var(--radius);background:var(--surface)}
+table{width:100%;border-collapse:collapse;font-size:14px;table-layout:fixed;}
+thead th{background:var(--primary-light);color:var(--accent);font-weight:700;font-size:12px;padding:7px 5px;border-bottom:2px solid var(--primary);border-right:1px solid #c5d0da;text-align:center;white-space:normal;vertical-align:middle;user-select:none;line-height:1.3;word-break:keep-all;}
+
+thead th:last-child{border-right:none}
+thead th.th-g{background:#dcfce7;color:#166534;}
+thead th.th-p{background:#fce7f3;color:#9d174d}
+thead th.th-y{background:#fef3c7;color:#92400e}
+thead th.th-name{text-align:left;position:sticky;left:0;z-index:20;}
+td.ncel{text-align:left;position:sticky;left:0;background:#fff;z-index:5;}
+td.ncel:has(input:focus){z-index:6;}
+tbody td{padding:0;border-bottom:1.5px solid #b0bec5;border-right:1.5px solid #b0bec5;text-align:center;vertical-align:middle;height:38px;position:relative;}
+tbody td:last-child{border-right:none}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:not(.tbody-sum-row):nth-child(even){background:#f5f9ff}
+tbody tr:not(.tbody-sum-row):hover td:not(.auto):not(.fc):not(.fname){background:#e0f2fe!important}
+tbody tr td.cell-active{outline:2px solid var(--primary);outline-offset:-2px;background:#fff!important;z-index:2;position:relative}
+td.auto{background:var(--auto-bg);color:var(--auto-text);font-family:'Segoe UI',Tahoma,Arial,sans-serif;font-size:14px;font-weight:600;padding:0 6px}
+td.num-td input[type=number]{background:transparent;}
+td.fc{background:var(--fixed-bg);color:var(--fixed-text);font-size:10px;padding:0 6px}
+td.fname{text-align:left;background:var(--primary-light);color:var(--accent);font-weight:600;font-size:14px;padding:0 8px}
+td.ncel{text-align:left;padding:0}
+/* Excel-uslubi inputlar */
+input[type=number]{
+  width:100%;height:38px;border:none;outline:none;
+  padding:0 6px;font-size:14px;text-align:center;
+  background:transparent;color:var(--text);
+  font-family:'Segoe UI',Tahoma,Arial,sans-serif;
+  -moz-appearance:textfield;appearance:textfield;
+  display:block;
+}
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+input[type=number]:focus{background:#fff;outline:2px solid var(--primary);outline-offset:-2px;}
+input.t-uy, input.t-ja{background:transparent;} /* tanlov UY va JA oq */
+
+input.ki-inp{
+  width:100%;height:36px;border:none;outline:none;
+  background:transparent;color:var(--text);
+  font-family:'Segoe UI',Tahoma,Arial,sans-serif;
+  font-size:14px;text-align:center;cursor:text;
+}
+input.ki-inp:focus{background:#fff;outline:2px solid var(--primary);outline-offset:-2px;}
+td.ki-td{text-align:center;vertical-align:middle;padding:0;border-bottom:1.5px solid #b0bec5;border-right:1.5px solid #b0bec5;}
+td.num-td{cursor:cell;user-select:none;}
+input[type=text].fan-inp{width:100%;height:38px;border:none;outline:none;padding:0 8px;font-size:14px;background:transparent;color:var(--text);font-family:inherit;cursor:cell}
+input[type=text].fan-inp:focus{background:#fff;outline:2px solid var(--primary);outline-offset:-2px}
+.btn-del{background:none;border:none;cursor:pointer;color:#fca5a5;padding:2px;border-radius:3px;display:flex;align-items:center}
+.tbody-sum-row td{background:#0c2340;color:#fff;font-family:'Segoe UI',Tahoma,Arial,sans-serif;font-size:14px;font-weight:600;padding:7px 8px;border-top:2px solid var(--primary);border-bottom:2px solid var(--primary);}
+.tbody-sum-row .th-sum{text-align:center;font-family:'Segoe UI',Tahoma,Arial,sans-serif;}
+.sum-label{text-align:left;padding-left:10px;font-size:13px;font-weight:600;opacity:1;}
+
+.th-sum{text-align:center;min-width:42px;}
+
+.th-sum-empty{background:#0c2340!important;}
+.btn-del:hover{color:#ef4444}
+.btn-del svg{width:12px;height:12px}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-logo">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:32px;height:32px;background:var(--primary);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;flex-shrink:0">BXU</div>
+          <div class="logo-text" style="line-height:1.1">Akadem<span>Platform</span></div>
+        </div>
+        <button id="sidebar-close-btn" title="Yopish" style="background:rgba(255,255,255,0.1);border:none;cursor:pointer;padding:5px;border-radius:6px;color:rgba(255,255,255,0.6);display:flex;align-items:center;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="logo-sub">Buxoro Xalqaro Universiteti</div>
+    </div>
+    <nav class="nav">
+    <div class="nav-label">Asosiy</div>
+    <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>DTS</div>
+    <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>Malaka talab</div>
+    <div class="nav-item active" id="nav-oquv"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>O'quv reja</div>
+    <div class="nav-label">Yuklama</div>
+    <div class="nav-item" id="nav-mavsumiy" onclick="window.showPage('mavsumiy')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3v18h18"/><path d="M7 16l4-4 4 4 4-8"/></svg>Mavsumiy</div>
+    <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 6v6l4 2"/></svg>Umumiy yuklama</div>
+    <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Psixologiya va umumiy fanlar</div>
+    <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Filologiya kafedra yuklamasi</div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="avatar">A</div>
+    <div><div class="u-name">Superadmin</div><div class="u-role">Buxoro Xalqaro Universiteti</div></div>
+  </div>
+</aside>
+
+<div class="main">
+  <!-- Sidebar toggle tugmasi (yashirilganda ko'rinadi) -->
+  <button class="sidebar-toggle" id="sidebar-toggle-btn" onclick="window.toggleSidebar()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
+
+  <div class="topbar">
+    <div>
+      <div class="breadcrumb" id="breadcrumb">O'quv reja</div>
+      <div class="page-title" id="page-title">O'quv reja</div>
+    </div>
+    <div class="topbar-right">
+      <span class="badge" id="autosave-badge" style="display:none">Avtosaqlash yoqilgan</span>
+      <span class="badge" id="topbar-badge">Barcha yillar</span>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- SAHIFA 1: PAPKALAR -->
+    <div class="page active" id="page-oquv">
+      <div class="top-actions">
+        <h2>O'quv rejalar</h2>
+        <button class="btn-new" onclick="window.openModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Yangi o'quv reja
+        </button>
+      </div>
+      <div class="years-list" id="years-list"></div>
+    </div>
+
+    <!-- SAHIFA: MAVSUMIY -->
+    <div class="page" id="page-mavsumiy">
+
+      <div class="top-actions" style="margin-bottom:16px">
+        <div>
+          <h2 style="font-size:16px;font-weight:700;margin-bottom:4px">Mavsumiy yuklama</h2>
+          <div style="font-size:12px;color:var(--text-muted)">O'quv yili va semestrni tanlang</div>
+        </div>
+      </div>
+
+      <!-- Filtrlar -->
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;align-items:center">
+        <!-- O'quv yili -->
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <label style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em">O'quv yili</label>
+          <select id="mav-year" onchange="window.loadMavsumiy()" style="border:1.5px solid var(--border-dark);border-radius:8px;padding:8px 14px;font-size:13px;font-family:inherit;color:var(--text);background:#fff;cursor:pointer;min-width:160px">
+            <option value="">— Tanlang —</option>
+          </select>
+        </div>
+
+        <!-- Semestr turi -->
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <label style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em">Semestr</label>
+          <div style="display:flex;gap:0;border:1.5px solid var(--border-dark);border-radius:8px;overflow:hidden">
+            <button id="btn-kuzgi" onclick="setSemestr('kuzgi')" style="padding:8px 20px;font-size:13px;font-family:inherit;border:none;cursor:pointer;font-weight:600;background:var(--primary);color:#fff">🍂 Kuzgi</button>
+            <button id="btn-bahorgi" onclick="setSemestr('bahorgi')" style="padding:8px 20px;font-size:13px;font-family:inherit;border:none;cursor:pointer;font-weight:500;background:#fff;color:var(--text-muted)">🌸 Bahorgi</button>
+          </div>
+        </div>
+
+        <!-- Ta'lim turi -->
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <label style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em">Ta'lim turi</label>
+          <div style="display:flex;gap:0;border:1.5px solid var(--border-dark);border-radius:8px;overflow:hidden">
+            <button class="talim-btn active-talim" data-talim="Kunduzgi" style="padding:8px 14px;font-size:13px;font-family:inherit;border:none;cursor:pointer;font-weight:600;background:var(--primary);color:#fff">Kunduzgi</button>
+            <button class="talim-btn" data-talim="Sirtqi" style="padding:8px 14px;font-size:13px;font-family:inherit;border:none;cursor:pointer;font-weight:500;background:#fff;color:var(--text-muted)">Sirtqi</button>
+            <button class="talim-btn" data-talim="Magistratura" style="padding:8px 14px;font-size:13px;font-family:inherit;border:none;cursor:pointer;font-weight:500;background:#fff;color:var(--text-muted)">Magistratura</button>
+          </div>
+        </div>
+
+        <!-- Fayl yuklash -->
+        <div style="display:flex;flex-direction:column;gap:4px;margin-left:auto">
+          <label style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em">Talabalar bazasi</label>
+          <label style="display:flex;align-items:center;gap:8px;padding:8px 16px;background:var(--primary-light);border:1.5px solid var(--primary-mid);border-radius:8px;cursor:pointer;font-size:13px;color:var(--accent);font-weight:600">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            XLSX yuklash
+            <input type="file" accept=".xlsx,.xls" id="xlsx-input" style="display:none" onchange="loadXLSX(this)">
+          </label>
+        </div>
+      </div>
+
+      <!-- Info qatori -->
+      <div id="mav-info" style="display:none;padding:10px 16px;background:var(--primary-light);border:1px solid var(--primary-mid);border-radius:8px;margin-bottom:16px;font-size:13px;color:var(--accent)"></div>
+
+      <!-- Jadval -->
+      <div style="background:#fff;border-radius:var(--radius);box-shadow:0 2px 12px rgba(0,0,0,0.08);overflow:hidden">
+        <div style="overflow-x:auto">
+          <table id="mav-table" style="width:100%;border-collapse:collapse;font-size:13px;table-layout:auto">
+            <thead id="mav-thead"></thead>
+            <tbody id="mav-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- SAHIFA 2: JADVAL -->
+    <div class="page" id="page-jadval">
+      <div class="jadval-topbar">
+        <div class="jadval-info">
+          <button class="back-btn" onclick="window.backToList()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15,18 9,12 15,6"/></svg>Orqaga
+          </button>
+          <div>
+            <div class="jadval-title" id="jadval-title">—</div>
+            <div class="jadval-sub" id="jadval-sub">—</div>
+          </div>
+        </div>
+        <button class="btn-save" onclick="window.saveJadval()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="13" height="13"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17,21 17,13 7,13 7,21"/><polyline points="7,3 7,8 15,8"/></svg>
+          Saqlash
+        </button>
+      </div>
+
+      <!-- TA'LIM TURI TABS -->
+      <div class="talim-tabs" id="talim-tabs" style="display:none">
+        <button class="talim-tab active" onclick="switchTalim('Kunduzgi',this)">☀️ Kunduzgi</button>
+        <button class="talim-tab" onclick="switchTalim('Sirtqi',this)">🌙 Sirtqi</button>
+        <button class="talim-tab" onclick="switchTalim('Magistratura',this)">🎓 Magistratura</button>
+      </div>
+
+
+
+
+
+      <div class="block">
+        <div class="block-header">
+          <div class="bhl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg><span class="btxt">1-blok: Majburiy fanlar</span><span class="btag">Asosiy</span></div>
+          <button class="btn-add" onclick="addRow('majburiy-body','m')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Fan qo'shish</button>
+        </div>
+        <div class="table-wrap"><table><thead id="thead-m"></thead><tbody id="majburiy-body"></tbody></table></div>
+      </div>
+
+      <div class="block">
+        <div class="block-header tanlov">
+          <div class="bhl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><span class="btxt">2-blok: Tanlov fanlar</span><span class="btag">Talaba tanlaydi</span></div>
+          <button class="btn-add" onclick="addRow('tanlov-body','t')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Fan qo'shish</button>
+        </div>
+        <div class="table-wrap"><table><thead id="thead-t"></thead><tbody id="tanlov-body"></tbody></table></div>
+      </div>
+
+      <div class="block">
+        <div class="block-header amaliyot">
+          <div class="bhl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg><span class="btxt">3-blok: Malakaviy amaliyot</span><span class="btag">Yagona qator</span></div>
+        </div>
+        <div class="table-wrap"><table><thead id="thead-am"></thead><tbody id="amaliyot-body"></tbody></table></div>
+      </div>
+
+      <div class="block">
+        <div class="block-header bmi-h">
+          <div class="bhl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg><span class="btxt">4-blok: BMI (Yakuniy davlat attestatsiyasi)</span><span class="btag">Yagona qator</span></div>
+        </div>
+        <div class="table-wrap"><table><thead id="thead-bmi"></thead><tbody id="bmi-body"></tbody></table></div>
+      </div>
+
+    <!-- UMUMIY BLOK -->
+    <div class="block" id="umumiy-block">
+      <div class="block-header" style="background:linear-gradient(135deg,#1e3a5f 0%,#0c2340 100%);">
+        <div class="bhl">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          <span class="btxt">Umumiy jami (barcha bloklar)</span>
+          <span class="btag">Avtomatik</span>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table id="umumiy-table"><thead id="thead-umumiy"></thead><tbody id="umumiy-body"></tbody></table>
+      </div>
+    </div>
+
+    </div>
+
+  </div>
+</div>
+
+<!-- STATUS BAR -->
+<div id="status-bar" style="display:none;position:fixed;bottom:0;left:220px;right:0;height:32px;background:#0c2340;border-top:2px solid var(--primary);z-index:200;display:flex;align-items:center;padding:0 20px;gap:24px;">
+  <span style="font-size:11px;color:rgba(255,255,255,0.5)">Tanlangan:</span>
+  <span style="font-size:11px;color:rgba(255,255,255,0.8)" id="sb-count">0 ta katak</span>
+  <span style="width:1px;height:14px;background:rgba(255,255,255,0.15)"></span>
+  <span style="font-size:11px;color:rgba(255,255,255,0.5)">Yig'indi:</span>
+  <span style="font-size:13px;font-weight:600;color:#fff;font-family:'Segoe UI',Tahoma,Arial,sans-serif" id="sb-sum">0</span>
+  <span style="width:1px;height:14px;background:rgba(255,255,255,0.15)"></span>
+  <span style="font-size:11px;color:rgba(255,255,255,0.5)">O'rtacha:</span>
+  <span style="font-size:11px;color:#7dd3fc;font-family:'Segoe UI',Tahoma,Arial,sans-serif" id="sb-avg">0</span>
+  <span style="width:1px;height:14px;background:rgba(255,255,255,0.15)"></span>
+  <span style="font-size:11px;color:rgba(255,255,255,0.5)">Min:</span>
+  <span style="font-size:11px;color:#86efac;font-family:'Segoe UI',Tahoma,Arial,sans-serif" id="sb-min">0</span>
+  <span style="font-size:11px;color:rgba(255,255,255,0.5)">Maks:</span>
+  <span style="font-size:11px;color:#fca5a5;font-family:'Segoe UI',Tahoma,Arial,sans-serif" id="sb-max">0</span>
+  <span style="margin-left:auto;font-size:10px;color:rgba(255,255,255,0.3)">Bekor qilish uchun Esc</span>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h3>Yangi o'quv reja yaratish</h3>
+    <div class="field"><label>O'quv yili</label>
+      <select id="m-year">
+        <option>2021–2022</option><option>2022–2023</option><option>2023–2024</option>
+        <option selected>2024–2025</option><option>2025–2026</option><option>2026–2027</option><option>2027–2028</option>
+      </select>
+    </div>
+    <div class="field"><label>Ta'lim turi</label>
+      <select id="m-talim">
+        <option value="Kunduzgi">Kunduzgi</option>
+        <option value="Sirtqi">Sirtqi</option>
+        <option value="Magistratura">Magistratura</option>
+      </select>
+    </div>
+    <div class="field"><label>Yo'nalish nomi</label>
+      <input type="text" id="m-yonalish" placeholder="Masalan: 60410100 – Iqtisodiyot">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="window.closeModal()">Bekor qilish</button>
+      <button class="btn-create" onclick="window.createReja()">Yaratish →</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// === EMBED QILINGAN MA'LUMOTLAR ===
+const EMBEDDED_DATA = [{"id": "1780036161904", "year": "2024–2025", "talim": "Kunduzgi", "yonalish": "60410100 – Iqtisodiyot", "savedAt": "2026-05-29 16:20:25", "data": {"talim_Kunduzgi": {"majburiy": [{"fan_nomi": "Amaliy matematika 1,2", "maruza": 60, "amaliy": 60, "lab": 0, "seminar": 0, "ki": "", "k1": 4, "k2": 6, "k3": 0, "k4": 0, "k5": 0, "k6": 0, "k7": 0, "k8": 0, "uy": 300, "ja": 120, "mt": 180, "jk": 10}, {"fan_nomi": "Iqtisodiyot nazariyasi 1,2", "maruza": 60, "amaliy": 0, "lab": 0, "seminar": 60, "ki": "", "k1": 6, "k2": 4, "k3": 0, "k4": 0, "k5": 0, "k6": 0, "k7": 0, "k8": 0, "uy": 300, "ja": 120, "mt": 180, "jk": 10}, {"fan_nomi": "Iqtisodiyotda axborot kommunikatsion texnologiyalar va tizimlar", "maruza": 30, "amaliy": 30, "lab": 0, "seminar": 0, "ki": "", "k1": 5, "k2": 0, "k3": 0, "k4": 0, "k5": 0, "k6": 0, "k7": 0, "k8": 0, "uy": 150, "ja": 60, "mt": 90, "jk": 5}, {"fan_nomi": "Xorijiy til 1", "maruza": 0, "amaliy": 90, "lab": 0, "seminar": 0, "ki": "", "k1": 6, "k2": 0, "k3": 0, "k4": 0, "k5": 0, "k6": 0, "k7": 0, "k8": 0, "uy": 180, "ja": 90, "mt": 90, "jk": 6}, {"fan_nomi": "Xorijiy til 2", "maruza": 0, "amaliy": 60, "lab": 0, "seminar": 0, "ki": "", "k1": 0, "k2": 4, "k3": 0, "k4": 0, "k5": 0, "k6": 0, "k7": 0, "k8": 0, "uy": 120, "ja": 60, "mt": 60, "jk": 4}, {"fan_nomi": "O’zbek(rus) tili", "maruza": 0, "amaliy": 60, "lab": 0, "seminar": 0, "ki": "", "k1": 0, "k2": 4, "k3": 0, "k4": 0, "k5": 0, "k6": 0, "k7": 0, "k8": 0, "uy": 120, "ja": 60, "mt": 60, "jk": 4}, {"fan_nomi": "Iqtisodiy taʼlimotlar tarixi", "maruza": 30, "amaliy": 0, "lab": 0, "seminar": 30, "ki": "", "k1": 5, "k2": 0, "k3": 0, "k4": 0, "k5": 0, "k6": 0, "k7": 0, "k8": 0, "uy": 150, "ja": 60, "mt": 90, "jk": 5}, {"fan_nomi": "O’zbekistonning eng yangi tarixi", "maruza": 30, "amaliy": 0, "lab": 0, "seminar": 30, "ki": "", "k1": 4, "k2": 0, "k3": 0, "k4": 0, "k5": 0, "k6": 0, "k7": 0, "k8": 0, "uy": 120, "ja": 60, "mt": 60, "jk": 4}, {"fan_nomi": "Dinshunoslik", "maruza": 30, "amaliy": 0, "lab": 0, "seminar": 30, "ki": "", "k1": 0, "k2": 4, "k3": 0, "k4": 0, "k5": 0, "k6": 0, "k7": 0, "k8": 0, "uy": 120, "ja": 60, "mt": 60, "jk": 4}, {"fan_nomi": "Jismoniy madaniyat va sport", "maruza": 0, "amaliy": 60, "lab": 0, "seminar": 0, "ki": "", "k1": 0, "k2": 4, "k3": 0, "k4": 0, "k5": 0, "k6": 0, "k7": 0, "k8": 0, "uy": 120, "ja": 60, "mt": 60, "jk": 4}, {"fan_nomi": "Akademik ko’nikmalar va kasbiy kompetentlik", "maruza": 30, "amaliy": 0, "lab": 0, "seminar": 30, "ki": "", "k1": 0, "k2": 4, "k3": 0, "k4": 0, "k5": 0, "k6": 0, "k7": 0, "k8": 0, "uy": 120, "ja": 60, "mt": 60, "jk": 4}, {"fan_nomi": "Falsafa", "maruza": 30, "amaliy": 0, "lab": 0, "seminar": 30, "ki": "", "k1": 0, "k2": 0, "k3": 4, "k4": 0, "k5": 0, "k6": 0, "k7": 0, "k8": 0, "uy": 120, "ja": 60, "mt": 60, "jk": 4}, {"fan_nomi": "Statistika", "maruza": 30, "amaliy": 60, "lab": 0, "seminar": 0, "ki": "", "k1": 0, "k2": 0, "k3": 6, "k4": 0, "k5": 0, "k6": 0, "k7": 0, "k8": 0, "uy": 180, "ja": 90, "mt": 90, "jk": 6}, {"fan_nomi": "Ekonometrikaga kirish", "maruza": 30, "amaliy": 30, "lab": 0, "seminar": 0, "ki": "", "k1": 0, "k2": 0, "k3": 5, "k4": 0, "k5": 0, "k6": 0, "k7": 0, "k8": 0, "uy": 150, "ja": 60, "mt": 90, "jk": 5}, {"fan_nomi": "Amaliy ekonometrika", "maruza": 30, "amaliy": 30, "lab": 0, "seminar": 0, "ki": "", "k1": 0, "k2": 0, "k3": 0, "k4": 5, "k5": 0, "k6": 0, "k7": 0, "k8": 0, "uy": 150, "ja": 60, "mt": 90, "jk": 5}, {"fan_nomi": "Mikroiqtisodiyot 1,2", "maruza": 60, "amaliy": 60, "lab": 0, "seminar": 0, "ki": "", "k1": 0, "k2": 0, "k3": 5, "k4": 5, "k5": 0, "k6": 0, "k7": 0, "k8": 0, "uy": 300, "ja": 120, "mt": 180, "jk": 10}, {"fan_nomi": "Makroiqtisodiyot 1,2", "maruza": 60, "amaliy": 60, "lab": 0, "seminar": 0, "ki": "", "k1": 0, "k2": 0, "k3": 0, "k4": 5, "k5": 5, "k6": 0, "k7": 0, "k8": 0, "uy": 300, "ja": 120, "mt": 180, "jk": 10}, {"fan_nomi": "Atrof-muhit iqtisodiyoti va iqlim oʻzgarishi", "maruza": 30, "amaliy": 0, "lab": 0, "seminar": 30, "ki": "", "k1": 0, "k2": 0, "k3": 0, "k4": 0, "k5": 5, "k6": 0, "k7": 0, "k8": 0, "uy": 150, "ja": 60, "mt": 90, "jk": 5}, {"fan_nomi": "Iqtisodiy siyosat", "maruza": 30, "amaliy": 0, "lab": 0, "seminar": 30, "ki": "", "k1": 0, "k2": 0, "k3": 5, "k4": 0, "k5": 0, "k6": 0, "k7": 0, "k8": 0, "uy": 150, "ja": 60, "mt": 90, "jk": 5}, {"fan_nomi": "Iqtisodiyotda maʼlumotlar tahlili", "maruza": 30, "amaliy": 0, "lab": 0, "seminar": 30, "ki": "", "k1": 0, "k2": 0, "k3": 5, "k4": 0, "k5": 0, "k6": 0, "k7": 0, "k8": 0, "uy": 150, "ja": 60, "mt": 90, "jk": 5}, {"fan_nomi": "Institutsional iqtisodiyot", "maruza": 30, "amaliy": 0, "lab": 0, "seminar": 30, "ki": "", "k1": 0, "k2": 0, "k3": 0, "k4": 0, "k5": 5, "k6": 0, "k7": 0, "k8": 0, "uy": 150, "ja": 60, "mt": 90, "jk": 5}, {"fan_nomi": "Moliyaviy iqtisodiyot", "maruza": 30, "amaliy": 0, "lab": 0, "seminar": 30, "ki": "", "k1": 0, "k2": 0, "k3": 0, "k4": 0, "k5": 5, "k6": 0, "k7": 0, "k8": 0, "uy": 150, "ja": 60, "mt": 90, "jk": 5}, {"fan_nomi": "Iqtisodiy xavfsizlik", "maruza": 30, "amaliy": 30, "lab": 0, "seminar": 0, "ki": "", "k1": 0, "k2": 0, "k3": 0, "k4": 0, "k5": 5, "k6": 0, "k7": 0, "k8": 0, "uy": 150, "ja": 60, "mt": 90, "jk": 5}, {"fan_nomi": "Global iqtisodiy rivojlanish", "maruza": 30, "amaliy": 0, "lab": 0, "seminar": 30, "ki": "", "k1": 0, "k2": 0, "k3": 0, "k4": 0, "k5": 5, "k6": 0, "k7": 0, "k8": 0, "uy": 150, "ja": 60, "mt": 90, "jk": 5}, {"fan_nomi": "Makroiqtisodiy tahlil va prognozlashtirish", "maruza": 30, "amaliy": 30, "lab": 0, "seminar": 0, "ki": "", "k1": 0, "k2": 0, "k3": 0, "k4": 0, "k5": 0, "k6": 5, "k7": 0, "k8": 0, "uy": 150, "ja": 60, "mt": 90, "jk": 5}, {"fan_nomi": "Investitsiya loyihalari tahlili", "maruza": 30, "amaliy": 0, "lab": 0, "seminar": 30, "ki": "", "k1": 0, "k2": 0, "k3": 0, "k4": 0, "k5": 0, "k6": 5, "k7": 0, "k8": 0, "uy": 150, "ja": 60, "mt": 90, "jk": 5}, {"fan_nomi": "Tarmoqlar iqtisodiyoti", "maruza": 30, "amaliy": 0, "lab": 0, "seminar": 30, "ki": "", "k1": 0, "k2": 0, "k3": 0, "k4": 0, "k5": 0, "k6": 5, "k7": 0, "k8": 0, "uy": 150, "ja": 60, "mt": 90, "jk": 5}], "tanlov": [{"fan_nomi": "Innovatsion iqtisodiyot", "maruza": 30, "amaliy": 30, "lab": 0, "seminar": 0, "ki": "", "k1": 0, "k2": 0, "k3": 0, "k4": 5, "k5": 0, "k6": 0, "k7": 0, "k8": 0, "uy": 150, "ja": 60, "mt": 90, "jk": 5}, {"fan_nomi": "Mehnat iqtisodiyoti", "maruza": 30, "amaliy": 30, "lab": 0, "seminar": 0, "ki": "", "k1": 0, "k2": 0, "k3": 0, "k4": 5, "k5": 0, "k6": 0, "k7": 0, "k8": 0, "uy": 150, "ja": 60, "mt": 90, "jk": 5}, {"fan_nomi": "Pul va banklar", "maruza": 30, "amaliy": 0, "lab": 0, "seminar": 30, "ki": "", "k1": 0, "k2": 0, "k3": 0, "k4": 0, "k5": 0, "k6": 5, "k7": 0, "k8": 0, "uy": 150, "ja": 60, "mt": 90, "jk": 5}, {"fan_nomi": "Iqtisodiy o’sish", "maruza": 30, "amaliy": 0, "lab": 0, "seminar": 30, "ki": "", "k1": 0, "k2": 0, "k3": 0, "k4": 0, "k5": 0, "k6": 4, "k7": 0, "k8": 0, "uy": 120, "ja": 60, "mt": 60, "jk": 4}, {"fan_nomi": "Xulq-atvor iqtisodiyoti", "maruza": 44, "amaliy": 0, "lab": 0, "seminar": 46, "ki": "", "k1": 0, "k2": 0, "k3": 0, "k4": 0, "k5": 0, "k6": 6, "k7": 0, "k8": 0, "uy": 180, "ja": 90, "mt": 90, "jk": 6}, {"fan_nomi": "Soliq va soliqqa tortish", "maruza": 30, "amaliy": 30, "lab": 0, "seminar": 0, "ki": "", "k1": 0, "k2": 0, "k3": 0, "k4": 0, "k5": 0, "k6": 5, "k7": 0, "k8": 0, "uy": 150, "ja": 60, "mt": 90, "jk": 5}, {"fan_nomi": "Buxgalteriya hisobi", "maruza": 30, "amaliy": 30, "lab": 0, "seminar": 0, "ki": "", "k1": 0, "k2": 0, "k3": 0, "k4": 0, "k5": 0, "k6": 4, "k7": 0, "k8": 0, "uy": 120, "ja": 60, "mt": 60, "jk": 4}, {"fan_nomi": "Marketing", "maruza": 30, "amaliy": 30, "lab": 0, "seminar": 0, "ki": "", "k1": 0, "k2": 0, "k3": 0, "k4": 5, "k5": 0, "k6": 0, "k7": 0, "k8": 0, "uy": 150, "ja": 60, "mt": 90, "jk": 5}, {"fan_nomi": "Menejment", "maruza": 44, "amaliy": 46, "lab": 0, "seminar": 0, "ki": "", "k1": 0, "k2": 0, "k3": 0, "k4": 0, "k5": 0, "k6": 6, "k7": 0, "k8": 0, "uy": 180, "ja": 90, "mt": 90, "jk": 6}, {"fan_nomi": "Iqtisodiy tahlil va audit", "maruza": 30, "amaliy": 30, "lab": 0, "seminar": 0, "ki": "", "k1": 0, "k2": 0, "k3": 0, "k4": 0, "k5": 0, "k6": 0, "k7": 5, "k8": 0, "uy": 150, "ja": 60, "mt": 90, "jk": 5}, {"fan_nomi": "Biznes komunikatsiyasi", "maruza": 30, "amaliy": 0, "lab": 0, "seminar": 30, "ki": "", "k1": 0, "k2": 0, "k3": 0, "k4": 5, "k5": 0, "k6": 0, "k7": 0, "k8": 0, "uy": 150, "ja": 60, "mt": 90, "jk": 5}, {"fan_nomi": "Boshqaruv psixologiyasi", "maruza": 30, "amaliy": 0, "lab": 0, "seminar": 30, "ki": "", "k1": 0, "k2": 0, "k3": 0, "k4": 0, "k5": 0, "k6": 0, "k7": 5, "k8": 0, "uy": 150, "ja": 60, "mt": 90, "jk": 5}, {"fan_nomi": "Korporativ boshqaruv", "maruza": 30, "amaliy": 0, "lab": 0, "seminar": 30, "ki": "", "k1": 0, "k2": 0, "k3": 0, "k4": 0, "k5": 0, "k6": 0, "k7": 5, "k8": 0, "uy": 150, "ja": 60, "mt": 90, "jk": 5}, {"fan_nomi": "Kapital bozori", "maruza": 30, "amaliy": 30, "lab": 0, "seminar": 0, "ki": "", "k1": 0, "k2": 0, "k3": 0, "k4": 0, "k5": 0, "k6": 0, "k7": 5, "k8": 0, "uy": 150, "ja": 60, "mt": 90, "jk": 5}, {"fan_nomi": "Logistika", "maruza": 30, "amaliy": 30, "lab": 0, "seminar": 0, "ki": "", "k1": 0, "k2": 0, "k3": 0, "k4": 0, "k5": 0, "k6": 0, "k7": 5, "k8": 0, "uy": 150, "ja": 60, "mt": 90, "jk": 5}, {"fan_nomi": "Taraqqiyot iqtisodiyoti", "maruza": 30, "amaliy": 0, "lab": 0, "seminar": 30, "ki": "", "k1": 0, "k2": 0, "k3": 0, "k4": 0, "k5": 0, "k6": 0, "k7": 5, "k8": 0, "uy": 150, "ja": 60, "mt": 90, "jk": 5}, {"fan_nomi": "Iqtisodiyotni davlat tomonidan tartibga solish", "maruza": 30, "amaliy": 0, "lab": 0, "seminar": 30, "ki": "", "k1": 0, "k2": 0, "k3": 0, "k4": 0, "k5": 0, "k6": 0, "k7": 5, "k8": 0, "uy": 150, "ja": 60, "mt": 90, "jk": 5}, {"fan_nomi": "Yangi tahrirdagi O’zbekiston Respublikasi Konstitutsiyasi", "maruza": 30, "amaliy": 0, "lab": 0, "seminar": 30, "ki": "", "k1": 0, "k2": 0, "k3": 0, "k4": 5, "k5": 0, "k6": 0, "k7": 0, "k8": 0, "uy": 150, "ja": 60, "mt": 90, "jk": 5}, {"fan_nomi": "Xalqaro iqtisodiyot", "maruza": 30, "amaliy": 30, "lab": 0, "seminar": 0, "ki": "", "k1": 0, "k2": 0, "k3": 0, "k4": 0, "k5": 0, "k6": 0, "k7": 5, "k8": 0, "uy": 150, "ja": 60, "mt": 90, "jk": 5}, {"fan_nomi": "Raqamli iqtisodiyot", "maruza": 30, "amaliy": 30, "lab": 0, "seminar": 0, "ki": "", "k1": 0, "k2": 0, "k3": 0, "k4": 0, "k5": 0, "k6": 0, "k7": 5, "k8": 0, "uy": 150, "ja": 60, "mt": 90, "jk": 5}, {"fan_nomi": "Raqamli biznes modellar", "maruza": 30, "amaliy": 0, "lab": 0, "seminar": 30, "ki": "", "k1": 0, "k2": 0, "k3": 0, "k4": 0, "k5": 0, "k6": 0, "k7": 5, "k8": 0, "uy": 150, "ja": 60, "mt": 90, "jk": 5}, {"fan_nomi": "Yashil iqtisodiyot", "maruza": 30, "amaliy": 0, "lab": 0, "seminar": 30, "ki": "", "k1": 0, "k2": 0, "k3": 0, "k4": 5, "k5": 0, "k6": 0, "k7": 0, "k8": 0, "uy": 150, "ja": 60, "mt": 90, "jk": 5}, {"fan_nomi": "Yashil texnologiyalarni rivojlantirish", "maruza": 30, "amaliy": 0, "lab": 0, "seminar": 30, "ki": "", "k1": 0, "k2": 0, "k3": 0, "k4": 0, "k5": 0, "k6": 0, "k7": 5, "k8": 0, "uy": 150, "ja": 60, "mt": 90, "jk": 5}, {"fan_nomi": "Mintaqaviy iqtisodiyot", "maruza": 30, "amaliy": 30, "lab": 0, "seminar": 0, "ki": "", "k1": 0, "k2": 0, "k3": 0, "k4": 0, "k5": 0, "k6": 0, "k7": 5, "k8": 0, "uy": 150, "ja": 60, "mt": 90, "jk": 5}], "tanlovJami": {"uy": 1800, "ja": 780, "maruza": 0, "amaliy": 0, "lab": 0, "seminar": 0, "ki": "", "mt": 1020, "jk": 60, "k1": 0, "k2": 0, "k3": 0, "k4": 15, "k5": 0, "k6": 15, "k7": 30, "k8": 0}, "amaliyot": {"k1": 0, "k2": 0, "k3": 0, "k4": 0, "k5": 0, "k6": 0, "k7": 0, "k8": 30, "uy": 900, "mt": 900, "jk": 30}, "bmi": {"k1": 0, "k2": 0, "k3": 0, "k4": 0, "k5": 0, "k6": 0, "k7": 0, "k8": 0, "uy": 0, "mt": 0, "jk": 0}}}}];
+
+function loadRejalar(){
+  // Yangi kalit
+  const newData = localStorage.getItem('bxu_akademplatform_rejalar');
+  if(newData) return JSON.parse(newData);
+  // Eski kalit — migratsiya
+  const oldData = localStorage.getItem('bxu_rejalar');
+  if(oldData){
+    localStorage.setItem('bxu_akademplatform_rejalar', oldData);
+    return JSON.parse(oldData);
+  }
+  // Embedded data — birinchi yuklanishda saqlаymiz
+  if(EMBEDDED_DATA && EMBEDDED_DATA.length){
+    localStorage.setItem('bxu_akademplatform_rejalar', JSON.stringify(EMBEDDED_DATA));
+    return EMBEDDED_DATA;
+  }
+  return [];
+}
+let rejalar = loadRejalar();
+let currentReja = null;
+let activeTalim = 'Kunduzgi'; // joriy tab
+
+const n = v => parseFloat(v)||0;
+
+// Ta'lim turiga qarab semestr soni
+const semCount = {Kunduzgi:8, Sirtqi:10, Magistratura:4};
+const semClass = {Kunduzgi:'', Sirtqi:'th-g', Magistratura:'th-y'};
+const semLabel = {Kunduzgi:'Kunduzgi', Sirtqi:'Sirtqi', Magistratura:'Magistr'};
+
+// ─── THEAD ───────────────────────────────────────────────
+function buildThead(id, talim, showDel, hideMiddle=false){
+  const sc = semCount[talim];
+  const cls = semClass[talim];
+  const lbl = semLabel[talim];
+  let semCols2 = '';
+  for(let i=1;i<=sc;i++) semCols2+=`<th class="${cls}">${i}</th>`;
+  // colgroup: T/R=44px, Fan nomi=220px, qolganlar=64px
+  const fixedCols = 9; // TR,FanNomi,UY,JA,Maruza,Amaliy,Lab,Seminar,KI,MT = 10 ta, minus TR
+  let colg = '<colgroup>';
+  if(showDel) colg += '<col style="width:42px">'; // T/R (faqat majburiy/tanlov da)
+  colg += '<col style="width:300px">'; // Fan nomi — keng
+  // UY, JA = 2 ta
+  colg += '<col style="width:80px">';
+  colg += '<col style="width:76px">';
+  // Maruza, Amaliy, Lab, Seminar = 4 ta
+  for(let i=0;i<4;i++) colg += '<col style="width:68px">';
+  // KI, MT = 2 ta
+  colg += '<col style="width:52px">';
+  colg += '<col style="width:80px">';
+  // Semestrlar — kichik
+  for(let i=0;i<sc;i++) colg += '<col style="width:46px">';
+  // Jami kredit
+  colg += '<col style="width:72px">';
+  // Del
+  if(showDel) colg += '<col style="width:32px">';
+  colg += '</colgroup>';
+
+  // colgroup ni table ga qo'shamiz
+  const table = document.getElementById(id).closest('table');
+  if(table){
+    const oldColg = table.querySelector('colgroup');
+    if(oldColg) oldColg.remove();
+    let finalColg = showDel ? colg : colg.replace('<col style="width:42px">', '');
+    // hideMiddle=true bo'lganda 6 ta o'rta ustun yo'q
+    if(hideMiddle){
+      let count = 0;
+      finalColg = finalColg.replace(/<col style="width:68px">/g, m => ++count <= 6 ? '' : m);
+    }
+    table.insertAdjacentHTML('afterbegin', finalColg);
+  }
+  document.getElementById(id).innerHTML=`
+  <tr>
+    ${showDel ? '<th rowspan="2" style="min-width:36px;width:36px;text-align:center;position:sticky;left:0;z-index:20;background:var(--primary-light);">T/R</th>' : ''}
+    <th rowspan="2" class="th-name">Fan nomi</th>
+    <th rowspan="2">Umumiy yuklama</th>
+    ${!hideMiddle ? '<th rowspan=\"2\">Jami Aud.</th><th rowspan=\"2\">Ma\'ruza</th><th rowspan=\"2\">Amaliy</th><th rowspan=\"2\">Lab.</th><th rowspan=\"2\">Seminar</th><th rowspan=\"2\">KI</th>' : ''}
+    <th rowspan="2">Mustaqil ta'lim</th>
+    <th colspan="${sc}" class="${cls}">${lbl} (${sc} semestr)</th>
+    <th rowspan="2">Jami kredit</th>
+    ${showDel?'<th rowspan="2" style="width:28px"></th>':''}
+  </tr>
+  <tr>${semCols2}</tr>`;
+}
+
+// ─── ROW ─────────────────────────────────────────────────
+function makeRow(prefix, talim, data){
+  const sc = semCount[talim];
+  const d = data&&data[talim] ? data[talim] : (data||{});
+  let kCells='';
+  for(let i=1;i<=sc;i++){
+    kCells+=`<td><div class="cell-overlay" onmousedown="overlayDown(event,this)" ondblclick="overlayDbl(this)"></div><input type="number" min="0" value="${d['k'+i]||''}" oninput="(this.closest('tr').dataset.prefix==='t'?calcRowTanlov:calcRow)(this,'${prefix}','${talim}')"></td>`;
+  }
+  const tr=document.createElement('tr');
+  tr.dataset.prefix=prefix;
+  tr.innerHTML=`
+    <td class="num-cell" style="text-align:center;font-size:13px;color:var(--text);font-weight:600;background:#fff;border-right:1px solid #b0bec5;">-</td>
+    <td class="ncel"><input type="text" class="fan-inp" placeholder="Fan nomini kiriting..." value="${d.fan_nomi||''}"></td>
+     <td class="auto uy-val">${d.uy||''}</td>
+    <td class="auto ja-val">${d.ja||''}</td>
+    <td class="num-td"><input type="number" min="0" value="${d.maruza||''}" class="${prefix}-m" oninput="(this.closest('tr').dataset.prefix==='t'?calcRowTanlov:calcRow)(this,'${prefix}','${talim}')"></td>
+    <td class="num-td"><input type="number" min="0" value="${d.amaliy||''}" class="${prefix}-a" oninput="(this.closest('tr').dataset.prefix==='t'?calcRowTanlov:calcRow)(this,'${prefix}','${talim}')"></td>
+    <td class="num-td"><input type="number" min="0" value="${d.lab||''}" class="${prefix}-l" oninput="(this.closest('tr').dataset.prefix==='t'?calcRowTanlov:calcRow)(this,'${prefix}','${talim}')"></td>
+    <td class="num-td"><input type="number" min="0" value="${d.seminar||''}" class="${prefix}-s" oninput="(this.closest('tr').dataset.prefix==='t'?calcRowTanlov:calcRow)(this,'${prefix}','${talim}')"></td>
+    <td class="ki-td"><input type="text" value="${d.ki||''}" class="ki-inp" oninput="updateSummary()"></td>
+    <td class="auto mt-val">${d.mt||''}</td>
+    ${kCells}
+    <td class="auto jk-val">${d.jk||''}</td>
+    <td><button class="btn-del" onclick="this.closest('tr').remove();updateSummary();updateRowNumbers()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3,6 5,6 21,6"/><path d="M19,6l-1,14a2,2,0,0,1-2,2H8a2,2,0,0,1-2-2L5,6"/></svg></button></td>`;
+  return tr;
+}
+
+function makeFixedRow(name, idPfx, talim, data, hideMiddle=false){
+  const sc=semCount[talim];
+  const d=data||{};
+  let kCells='';
+  for(let i=1;i<=sc;i++){
+    kCells+=`<td><input type="number" min="0" value="${d['k'+i]||''}" class="${idPfx}-k" oninput="calcFixed('${idPfx}','${talim}')"></td>`;
+  }
+  const middleCols = hideMiddle ? '' : `<td class="fc">—</td><td class="fc">—</td><td class="fc">—</td><td class="fc">—</td><td class="fc">—</td><td class="fc">—</td>`;
+  return `<tr>
+    <td class="fname">${name}</td>
+    <td class="auto" id="${idPfx}-uy">${d.uy||''}</td>
+    ${middleCols}
+    <td class="auto" id="${idPfx}-mt">${d.mt||''}</td>
+    ${kCells}
+    <td class="auto" id="${idPfx}-jami">${d.jk||''}</td>
+  </tr>`;
+}
+
+// ─── HISOB ───────────────────────────────────────────────
+function calcTanlovJami(inp){
+  const row = inp.closest('tr');
+  if(!row) return;
+  const uy = parseFloat(row.querySelector('.t-sum-uy')?.value)||0;
+  const ja = parseFloat(row.querySelector('.t-sum-ja')?.value)||0;
+  const mt = Math.max(0, uy - ja);
+  const kInputs = [...row.querySelectorAll('.t-sum-k')];
+  let jk = 0;
+  kInputs.forEach(i => jk += parseFloat(i.value)||0);
+  const mtEl = row.querySelector('.t-sum-mt');
+  const jkEl = row.querySelector('.t-sum-jk');
+  if(mtEl) mtEl.textContent = mt||'';
+  if(jkEl) jkEl.textContent = jk||'';
+}
+
+function calcRowTanlov(inp, prefix, talim){
+  const tr = inp.closest('tr');
+  const gv = cls => parseFloat(tr.querySelector('.'+cls)?.value)||0;
+  // Tanlov: maruza(0),amaliy(1),lab(2),seminar(3), kredit(4+)
+  const m = gv(prefix+'-m');
+  const a = gv(prefix+'-a');
+  const l = gv(prefix+'-l');
+  const s = gv(prefix+'-s');
+  const ja = m + a + l + s;
+  const allInps = [...tr.querySelectorAll('input[type=number]')];
+  const sc = semCount[talim];
+  let jk = 0;
+  for(let i=4; i<4+sc; i++) jk += parseFloat(allInps[i]?.value)||0;
+  const uy = jk * 30;
+  const mt = Math.max(0, uy - ja);
+  tr.querySelector('.uy-val').textContent = uy||'';
+  tr.querySelector('.ja-val').textContent = ja||'';
+  tr.querySelector('.mt-val').textContent = mt||'';
+  tr.querySelector('.jk-val').textContent = jk||'';
+  updateSummary();
+  if(typeof updateStatusBar==='function') updateStatusBar();
+}
+
+function calcRow(inp, prefix, talim){
+  const tr=inp.closest('tr');
+  const gv=cls=>n(tr.querySelector('.'+cls)?.value);
+  const m=gv(prefix+'-m'),a=gv(prefix+'-a'),l=gv(prefix+'-l'),s=gv(prefix+'-s');
+  const ja=m+a+l+s;
+  const sc=semCount[talim];
+  // Input tartibi: maruza(0),amaliy(1),lab(2),seminar(3), kredit k1..kN(4 dan) — KI text input
+  const allInps=[...tr.querySelectorAll('input[type=number]')];
+  let jk=0;
+  for(let i=4;i<4+sc;i++) jk+=n(allInps[i]?.value);
+  const uy=jk*30, mt=Math.max(0,uy-ja);
+  tr.querySelector('.uy-val').textContent=uy||'';
+  tr.querySelector('.ja-val').textContent=ja||'';
+  tr.querySelector('.mt-val').textContent=mt||'';
+  tr.querySelector('.jk-val').textContent=jk||'';
+  updateSummary();
+  // Status bar ni ham yangilaymiz
+  if(typeof updateStatusBar==='function') updateStatusBar();
+}
+
+window.addRow = function(bodyId, prefix){
+  document.getElementById(bodyId).appendChild(makeRow(prefix, activeTalim));
+  updateRowNumbers();
+}
+
+function updateRowNumbers(){
+  ['majburiy-body','tanlov-body'].forEach(bodyId=>{
+    const rows=[...document.querySelectorAll('#'+bodyId+' tr')].filter(tr=>!tr.classList.contains('tbody-sum-row'));
+    rows.forEach((tr,i)=>{
+      const numCell=tr.querySelector('.num-cell');
+      if(numCell) numCell.textContent=i+1;
+    });
+  });
+}
+
+function calcFixed(pfx, talim){
+  const sc=semCount[talim];
+  let jami=0;
+  document.querySelectorAll('.'+pfx+'-k').forEach(i=>jami+=n(i.value));
+  const uy=jami*30;
+  document.getElementById(pfx+'-jami').textContent=jami||'';
+  document.getElementById(pfx+'-uy').textContent=uy||'';
+  document.getElementById(pfx+'-mt').textContent=uy||'';
+  updateSummary();
+}
+
+function updateSummary(){
+  let tf=0,tk=0,tuy=0;
+  document.querySelectorAll('#majburiy-body tr,#tanlov-body tr').forEach(tr=>{
+    tf++;tk+=n(tr.querySelector('.jk-val')?.textContent);tuy+=n(tr.querySelector('.uy-val')?.textContent);
+  });
+  ['am','bmi'].forEach(id=>{
+    tk+=n(document.getElementById(id+'-jami')?.textContent);
+    tuy+=n(document.getElementById(id+'-uy')?.textContent);
+  });
+  const sf=document.getElementById('sum-fanlar');
+  const sk=document.getElementById('sum-kreditlar');
+  const sy=document.getElementById('sum-yuklama');
+  if(sf) sf.textContent=tf;
+  if(sk) sk.textContent=tk;
+  if(sy) sy.textContent=tuy;
+  // Har bir blok ustun jamilarini hisoblash
+  updateColSums('thead-m','majburiy-body');
+  if(document.getElementById('umumiy-body')?.children.length) calcUmumiy(activeTalim);
+}
+
+function getSumRowTop(theadEl){
+  return theadEl ? theadEl.offsetHeight : 74;
+}
+
+function buildUmumiy(talim){
+  const sc = semCount[talim];
+  // Thead
+  buildThead('thead-umumiy', talim, false);
+
+  // Tbody — bitta jami qator
+  const tbody = document.getElementById('umumiy-body');
+  if(!tbody) return;
+  tbody.innerHTML = '';
+
+  const tr = document.createElement('tr');
+  tr.className = 'tbody-sum-row';
+  let semTds = '';
+  const cls = semClass[talim];
+  for(let i=1;i<=sc;i++) semTds += `<td class="th-sum ${cls}" id="umumiy-sk${i}"></td>`;
+  tr.innerHTML = `
+    <td class="sum-label" style="position:sticky;left:0;z-index:5;font-size:14px;">Jami</td>
+    <td class="th-sum" id="umumiy-suy"></td>
+    <td class="th-sum" id="umumiy-sja"></td>
+    <td class="th-sum" id="umumiy-sm"></td>
+    <td class="th-sum" id="umumiy-sa"></td>
+    <td class="th-sum" id="umumiy-sl"></td>
+    <td class="th-sum" id="umumiy-ss"></td>
+    <td class="th-sum" id="umumiy-ski"></td>
+    <td class="th-sum" id="umumiy-smt"></td>
+    ${semTds}
+    <td class="th-sum" id="umumiy-sjk"></td>
+  `;
+  tbody.appendChild(tr);
+}
+
+function calcUmumiy(talim){
+  const sc = semCount[talim];
+  const n = v => parseFloat(v)||0;
+
+  // Barcha bloklar yig'indisi
+  // 1. Majburiy thead jamilari
+  const get = id => n(document.getElementById(id)?.textContent);
+  const getInp = id => n(document.getElementById(id)?.value);
+
+  let uy=0, ja=0, sm=0, sa=0, sl=0, ss=0, ski=0, smt=0, sjk=0;
+  const sk = Array(sc+1).fill(0);
+
+  // Majburiy blok jamilari
+  uy  += get('thead-m-suy');
+  ja  += get('thead-m-sja');
+  // sm, sa, sl, ss hisoblanmaydi — ochiq qoladi
+  smt += get('thead-m-smt');
+  sjk += get('thead-m-sjk');
+  for(let i=1;i<=sc;i++) sk[i] += get('thead-m-sk'+i);
+
+  // Tanlov — Jami qatoridan (qo'lda kiritilgan)
+  const tanlovJamiRow = document.querySelector('#tanlov-body .tbody-sum-row');
+  if(tanlovJamiRow){
+    const inps = [...tanlovJamiRow.querySelectorAll('input[type=number]')];
+    uy  += n(inps[0]?.value);
+    ja  += n(inps[1]?.value);
+    sm  += n(inps[2]?.value);
+    sa  += n(inps[3]?.value);
+    sl  += n(inps[4]?.value);
+    ss  += n(inps[5]?.value);
+    smt += n(tanlovJamiRow.querySelector('.t-sum-mt')?.textContent);
+    sjk += n(tanlovJamiRow.querySelector('.t-sum-jk')?.textContent);
+    const kInps = [...tanlovJamiRow.querySelectorAll('.t-sum-k')];
+    for(let i=1;i<=sc;i++) sk[i] += n(kInps[i-1]?.value);
+  }
+
+  // Malakaviy amaliyot
+  uy  += get('am-uy');
+  smt += get('am-mt');
+  sjk += get('am-jami');
+  for(let i=1;i<=sc;i++) sk[i] += n(document.querySelectorAll('.am-k')[i-1]?.value);
+
+  // BMI
+  uy  += get('bmi-uy');
+  smt += get('bmi-mt');
+  sjk += get('bmi-jami');
+  for(let i=1;i<=sc;i++) sk[i] += n(document.querySelectorAll('.bmi-k')[i-1]?.value);
+
+  // Ko'rsatamiz
+  const set = (id,val) => { const el=document.getElementById(id); if(el) el.textContent=val||''; };
+  set('umumiy-suy', uy);
+  set('umumiy-sja', ja);
+  // Ma'ruza, Amaliy, Lab, Seminar — ochiq qoladi
+  set('umumiy-sm',  '');
+  set('umumiy-sa',  '');
+  set('umumiy-sl',  '');
+  set('umumiy-ss',  '');
+  set('umumiy-ski', '');
+  set('umumiy-smt', smt);
+  set('umumiy-sjk', sjk);
+  for(let i=1;i<=sc;i++) set('umumiy-sk'+i, sk[i]);
+}
+
+function buildSumRows(talim){
+  const sc = semCount[talim];
+  const configs = [
+    {bodyId:'majburiy-body', id:'m', cls:''},
+    {bodyId:'tanlov-body',   id:'t', cls:'', manualSum:true},
+    {bodyId:'amaliyot-body', id:'am', cls:'', noNum:true},
+    {bodyId:'bmi-body',      id:'bmi', cls:'', noNum:true}
+  ];
+  configs.forEach(({bodyId, id, noNum, manualSum})=>{
+    const tbody = document.getElementById(bodyId);
+    if(!tbody) return;
+    // Eski jami qatorini olib tashlaymiz
+    const old = tbody.querySelector('.tbody-sum-row');
+    if(old) old.remove();
+
+    const theadId = 'thead-'+id;
+    let semTds = '';
+    const cls = semClass[talim];
+    for(let i=1;i<=sc;i++) semTds += `<td class="th-sum ${cls}" id="${theadId}-sk${i}"></td>`;
+    const delTd = (!noNum) ? '<td class="th-sum"></td>' : '';
+
+    const tr = document.createElement('tr');
+    tr.className = 'tbody-sum-row';
+    if(manualSum){
+      // Saqlangan tanlovJami ma'lumotlarini yuklaymiz
+      const td = currentReja?.data?.['talim_'+activeTalim]?.tanlovJami || {};
+      let manualKCells='';
+      for(let i=1;i<=sc;i++) manualKCells+=`<td><input type="number" min="0" value="${td['k'+i]||''}" class="t-sum-k" style="width:100%;height:36px;border:none;background:transparent;text-align:center;font-size:14px;font-weight:600;color:#fff;font-family:inherit;-moz-appearance:textfield;appearance:textfield;" oninput="calcTanlovJami(this)"></td>`;
+      tr.innerHTML = `
+        <td style="background:#0c2340;border:none;width:42px;"></td>
+        <td class="sum-label" style="position:sticky;left:0;z-index:5;">Jami</td>
+        <td><input type="number" min="0" value="${td.uy||''}" class="t-sum-uy" style="width:100%;height:36px;border:none;background:transparent;text-align:center;font-size:14px;font-weight:600;color:#fff;font-family:inherit;-moz-appearance:textfield;appearance:textfield;" oninput="calcTanlovJami(this)"></td>
+        <td><input type="number" min="0" value="${td.ja||''}" class="t-sum-ja" style="width:100%;height:36px;border:none;background:transparent;text-align:center;font-size:14px;font-weight:600;color:#fff;font-family:inherit;-moz-appearance:textfield;appearance:textfield;" oninput="calcTanlovJami(this)"></td>
+        <td><input type="number" min="0" value="${td.maruza||''}" style="width:100%;height:36px;border:none;background:transparent;text-align:center;font-size:14px;font-weight:600;color:#fff;font-family:inherit;-moz-appearance:textfield;appearance:textfield;"></td>
+        <td><input type="number" min="0" value="${td.amaliy||''}" style="width:100%;height:36px;border:none;background:transparent;text-align:center;font-size:14px;font-weight:600;color:#fff;font-family:inherit;-moz-appearance:textfield;appearance:textfield;"></td>
+        <td><input type="number" min="0" value="${td.lab||''}" style="width:100%;height:36px;border:none;background:transparent;text-align:center;font-size:14px;font-weight:600;color:#fff;font-family:inherit;-moz-appearance:textfield;appearance:textfield;"></td>
+        <td><input type="number" min="0" value="${td.seminar||''}" style="width:100%;height:36px;border:none;background:transparent;text-align:center;font-size:14px;font-weight:600;color:#fff;font-family:inherit;-moz-appearance:textfield;appearance:textfield;"></td>
+        <td><input type="number" min="0" value="${td.ki||''}" style="width:100%;height:36px;border:none;background:transparent;text-align:center;font-size:14px;font-weight:600;color:#fff;font-family:inherit;-moz-appearance:textfield;appearance:textfield;"></td>
+        <td class="t-sum-mt" style="font-size:14px;font-weight:600;text-align:center;padding:0 6px;color:#fff;">${td.mt||''}</td>
+        ${manualKCells}
+        <td class="t-sum-jk" style="font-size:14px;font-weight:600;text-align:center;padding:0 6px;color:#fff;">${td.jk||''}</td>
+        ${delTd}
+      `;
+    } else {
+      const middleSumCols = noNum ? '' : `
+        <td class="th-sum" id="${theadId}-sja"></td>
+        <td class="th-sum" id="${theadId}-sm"></td>
+        <td class="th-sum" id="${theadId}-sa"></td>
+        <td class="th-sum" id="${theadId}-sl"></td>
+        <td class="th-sum" id="${theadId}-ss"></td>
+        <td class="th-sum" id="${theadId}-ski"></td>`;
+    tr.innerHTML = `
+        <td class="sum-label" style="position:sticky;left:0;z-index:5;">Jami</td>
+        <td class="th-sum" id="${theadId}-suy"></td>
+        ${middleSumCols}
+        <td class="th-sum" id="${theadId}-smt"></td>
+        ${semTds}
+        <td class="th-sum" id="${theadId}-sjk"></td>
+        ${delTd}
+      `;
+    }
+    tbody.insertBefore(tr, tbody.firstChild);
+  });
+}
+
+function updateColSums(theadId, bodyId){
+  const rows=[...document.querySelectorAll('#'+bodyId+' tr')].filter(tr=>!tr.classList.contains('tbody-sum-row'));
+  if(!rows.length) return;
+  const sc=semCount[activeTalim];
+
+  const sumAuto=(cls)=>{let s=0;rows.forEach(tr=>{s+=n(tr.querySelector('.'+cls)?.textContent);});return s;};
+  // Input indekslari: maruza=0, amaliy=1, lab=2, seminar=3, k1..kN=4..3+sc (KI text input)
+  const isTanlovBody = bodyId==='tanlov-body';
+  const sumInp=(idx)=>{let s=0;rows.forEach(tr=>{const inps=[...tr.querySelectorAll('input[type=number]')];s+=n(inps[idx]?.value);});return s;};
+  const sumInpTanlovDirect=(idx)=>{let s=0;rows.forEach(tr=>{const inps=[...tr.querySelectorAll('input[type=number]')];s+=n(inps[idx]?.value);});return s;};
+
+  const set=(id,val)=>{const el=document.getElementById(id);if(el)el.textContent=(val===''||val===null||val===undefined)?'':val;};
+
+  set(theadId+'-suy', sumAuto('uy-val'));
+  set(theadId+'-sja', sumAuto('ja-val'));
+  set(theadId+'-sm',   sumInp(0));
+  set(theadId+'-sa',   sumInp(1));
+  set(theadId+'-sl',   sumInp(2));
+  set(theadId+'-ss',   sumInp(3));
+  // KI — nechta fan KI ga ega (bo'sh bo'lmagan text inputlar)
+  const countKI=()=>{let c=0;rows.forEach(tr=>{const v=tr.querySelector('.ki-inp')?.value?.trim();if(v)c++;});return c;};
+  const kiCount=countKI();
+  set(theadId+'-ski', kiCount>0 ? kiCount+' ta' : '');
+  set(theadId+'-smt',  sumAuto('mt-val'));
+  for(let i=1;i<=sc;i++) set(theadId+'-sk'+i, sumInp(3+i));
+  set(theadId+'-sjk',  sumAuto('jk-val'));
+}
+
+// ─── TA'LIM TURI SWITCH ──────────────────────────────────
+function switchTalim(talim, btn){
+  // Joriy ma'lumotlarni vaqtincha saqlash
+  if(currentReja) _collectCurrentTabData();
+  activeTalim=talim;
+  document.querySelectorAll('.talim-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  _renderJadvalForTalim(talim);
+}
+
+function _renderJadvalForTalim(talim){
+  buildThead('thead-m', talim, true);
+  buildThead('thead-t', talim, true);
+  buildThead('thead-am', talim, false, true);
+  buildThead('thead-bmi', talim, false, true);
+
+  const mb=document.getElementById('majburiy-body');
+  const tb=document.getElementById('tanlov-body');
+  mb.innerHTML='';tb.innerHTML='';
+
+  const d=currentReja.data||{};
+  const td_key='talim_'+talim;
+  const td=d[td_key]||{};
+
+  (td.majburiy||[]).forEach(r=>mb.appendChild(makeRow('m',talim,r)));
+  (td.tanlov||[]).forEach(r=>tb.appendChild(makeRow('t',talim,r)));
+  if(!mb.children.length) mb.appendChild(makeRow('m',talim));
+  if(!tb.children.length) tb.appendChild(makeRow('t',talim));
+
+  document.getElementById('amaliyot-body').innerHTML=makeFixedRow('Malakaviy amaliyot','am',talim,td.amaliyot,true);
+  document.getElementById('bmi-body').innerHTML=makeFixedRow('BMI (Yakuniy davlat attestatsiyasi)','bmi',talim,td.bmi,true);
+
+  setTimeout(()=>{
+    // Saqlangan qatorlarni qayta hisoblash
+    document.querySelectorAll('#majburiy-body tr:not(.tbody-sum-row)').forEach(tr=>{
+      const inp = tr.querySelector('input[type=number]');
+      if(inp) calcRow(inp, 'm', activeTalim);
+    });
+    document.querySelectorAll('#tanlov-body tr:not(.tbody-sum-row)').forEach(tr=>{
+      const inp = tr.querySelector('input[type=number]');
+      if(inp) calcRowTanlov(inp, 't', activeTalim);
+    });
+    buildSumRows(activeTalim);
+    updateRowNumbers();
+    updateSummary();
+    buildUmumiy(activeTalim);
+    setTimeout(()=>calcUmumiy(activeTalim), 50);
+  },100);
+}
+
+function _collectCurrentTabData(){
+  const talim=activeTalim;
+  const sc=semCount[talim];
+
+  const getRows=bodyId=>{
+    const rows=[];
+    document.querySelectorAll('#'+bodyId+' tr').forEach(tr=>{
+      if(tr.classList.contains('tbody-sum-row')) return;
+      const fanNomi=tr.querySelector('.fan-inp')?.value||'';
+      if(!fanNomi.trim()) return; // Bo'sh qatorlarni saqlamaymiz
+      const allInps=[...tr.querySelectorAll('input[type=number]')];
+      const row={fan_nomi:fanNomi};
+      const bodyId2=tr.closest('tbody')?.id;
+      if(bodyId2==='tanlov-body'){
+        // Tanlov: maruza(0),amaliy(1),lab(2),seminar(3),kredit(4+) — UY/JA/MT auto
+        row.maruza=n(allInps[0]?.value);
+        row.amaliy=n(allInps[1]?.value);
+        row.lab=n(allInps[2]?.value);
+        row.seminar=n(allInps[3]?.value);
+        row.ki=tr.querySelector('.ki-inp')?.value||'';
+        for(let i=1;i<=sc;i++) row['k'+i]=n(allInps[3+i]?.value);
+        row.uy=n(tr.querySelector('.uy-val')?.textContent);
+        row.ja=n(tr.querySelector('.ja-val')?.textContent);
+        row.mt=n(tr.querySelector('.mt-val')?.textContent);
+        row.jk=n(tr.querySelector('.jk-val')?.textContent);
+      } else {
+        row.maruza=n(allInps[0]?.value);
+        row.amaliy=n(allInps[1]?.value);
+        row.lab=n(allInps[2]?.value);
+        row.seminar=n(allInps[3]?.value);
+        row.ki=tr.querySelector('.ki-inp')?.value||'';
+        for(let i=1;i<=sc;i++) row['k'+i]=n(allInps[3+i]?.value);
+      }
+      row.uy=n(tr.querySelector('.uy-val')?.textContent);
+      row.ja=n(tr.querySelector('.ja-val')?.textContent);
+      row.mt=n(tr.querySelector('.mt-val')?.textContent);
+      row.jk=n(tr.querySelector('.jk-val')?.textContent);
+      rows.push(row);
+    });
+    return rows;
+  };
+
+  const getFixed=pfx=>{
+    const row={};
+    document.querySelectorAll('.'+pfx+'-k').forEach((inp,i)=>row['k'+(i+1)]=n(inp.value));
+    row.uy=n(document.getElementById(pfx+'-uy')?.textContent);
+    row.mt=n(document.getElementById(pfx+'-mt')?.textContent);
+    row.jk=n(document.getElementById(pfx+'-jami')?.textContent);
+    return row;
+  };
+
+  if(!currentReja.data) currentReja.data={};
+  // Tanlov Jami qatorini saqlaymiz
+  const tanlovJamiRow = document.querySelector('#tanlov-body .tbody-sum-row');
+  let tanlovJami = null;
+  if(tanlovJamiRow){
+    const inps = [...tanlovJamiRow.querySelectorAll('input[type=number]')];
+    const sc = semCount[talim];
+    tanlovJami = {
+      uy: n(inps[0]?.value),
+      ja: n(inps[1]?.value),
+      maruza: n(inps[2]?.value),
+      amaliy: n(inps[3]?.value),
+      lab: n(inps[4]?.value),
+      seminar: n(inps[5]?.value),
+      ki: tanlovJamiRow.querySelector('input[type=text]')?.value||'',
+      mt: n(tanlovJamiRow.querySelector('.t-sum-mt')?.textContent),
+      jk: n(tanlovJamiRow.querySelector('.t-sum-jk')?.textContent)
+    };
+    for(let i=1;i<=sc;i++) tanlovJami['k'+i]=n(tanlovJamiRow.querySelector('.t-sum-k:nth-of-type('+i+')')?.value);
+    // t-sum-k inputlarni tartib bilan olamiz
+    const kInps=[...tanlovJamiRow.querySelectorAll('.t-sum-k')];
+    for(let i=1;i<=sc;i++) tanlovJami['k'+i]=n(kInps[i-1]?.value);
+  }
+
+  currentReja.data['talim_'+talim]={
+    majburiy:getRows('majburiy-body'),
+    tanlov:getRows('tanlov-body'),
+    tanlovJami: tanlovJami,
+    amaliyot:getFixed('am'),
+    bmi:getFixed('bmi')
+  };
+}
+
+// ─── JADVAL OCHISH ───────────────────────────────────────
+function openJadvalById(id){
+  const reja = rejalar.find(r=>r.id===id);
+  if(!reja) return;
+  openJadval(reja);
+}
+
+function openJadval(reja){
+  currentReja=reja;
+  activeTalim=reja.talim||'Kunduzgi';
+
+  document.getElementById('jadval-title').textContent=reja.yonalish;
+  document.getElementById('jadval-sub').textContent=reja.year+' · '+reja.talim;
+  document.getElementById('breadcrumb').innerHTML=
+    `<span onclick="window.backToList()">O'quv reja</span> / ${reja.year} / ${reja.talim} / ${reja.yonalish}`;
+  document.getElementById('page-title').textContent=reja.yonalish;
+  document.getElementById('topbar-badge').textContent=reja.year;
+
+  // Tab ko'rsatish va faol qilish
+  // Tab faqat barcha 3 ta talim turi uchun kerak emas,
+  // har bir reja o'z talim turi bilan yaratiladi — shuning uchun tab yashiramiz
+  document.getElementById('talim-tabs').style.display='none';
+
+  _renderJadvalForTalim(reja.talim);
+  // Avtosaqlash badge ni ko'rsat
+  const badge=document.getElementById('autosave-badge');
+  if(badge) badge.style.display='';
+  showPage('jadval');
+}
+
+// ─── SAQLASH ─────────────────────────────────────────────
+window.saveJadval = function(){
+  if(!currentReja)return;
+  _collectCurrentTabData();
+  currentReja.savedAt=new Date().toLocaleString('uz-UZ');
+  const idx=rejalar.findIndex(r=>r.id===currentReja.id);
+  if(idx>=0) rejalar[idx]=currentReja;
+  localStorage.setItem('bxu_akademplatform_rejalar',JSON.stringify(rejalar));
+  rejalar = loadRejalar();
+
+  const btn=document.querySelector('.btn-save');
+  btn.style.background='#059669';
+  btn.innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20,6 9,17 4,12"/></svg>Saqlandi!';
+  setTimeout(()=>{
+    btn.style.background='';
+    btn.innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17,21 17,13 7,13 7,21"/><polyline points="7,3 7,8 15,8"/></svg>Saqlash';
+  },2000);
+  // ─── EXCEL PASTE: KO'P QATOR PASTE ──────────────────────
+document.addEventListener('paste', function(e){
+  const inp = e.target;
+  if(!inp.classList.contains('fan-inp')) return;
+
+  const raw = (e.clipboardData || window.clipboardData).getData('text');
+  
+  // Barcha qatorlarni olish, bo'sh va sarlavha qatorlarini filtr
+  const lines = raw.split(/\r?\n/)
+    .map(l => l.replace(/\t.*/, '').trim()) // Tab bilan ajratilgan ustunlardan faqat 1-ustun
+    .filter(l => l && l !== 'Tanlov fanlar' && l !== 'Majburiy fanlar');
+
+  if(!lines.length) return;
+  e.preventDefault();
+
+  const tbody = inp.closest('tbody');
+  if(!tbody) return;
+  const prefix = tbody.id === 'majburiy-body' ? 'm' : 't';
+  const currentTr = inp.closest('tr');
+
+  // Birinchi qatorni joriy inputga
+  inp.value = lines[0];
+
+  // Qolganlarini ketma-ket qo'shamiz
+  let after = currentTr;
+  for(let i = 1; i < lines.length; i++){
+    const newTr = makeRow(prefix, activeTalim);
+    newTr.querySelector('.fan-inp').value = lines[i];
+    after.after(newTr);
+    after = newTr;
+  }
+
+  updateRowNumbers();
+  updateSummary();
+  scheduleAutoSave();
+});
+
+// ─── AVTOSAVE ────────────────────────────────────────────
+let autoSaveTimer = null;
+let autoSave30Timer = null;
+
+function autoSave(){
+  if(!currentReja) return;
+  _collectCurrentTabData();
+  currentReja.savedAt = new Date().toLocaleString('uz-UZ');
+  const idx = rejalar.findIndex(r=>r.id===currentReja.id);
+  if(idx>=0) rejalar[idx]=currentReja;
+  localStorage.setItem('bxu_akademplatform_rejalar', JSON.stringify(rejalar));
+  rejalar = loadRejalar();
+
+  // Belgini ko'rsatish
+  const badge = document.getElementById('autosave-badge');
+  if(badge){
+    badge.textContent = '✓ Avtosaqlandi';
+    badge.style.background = '#059669';
+    badge.style.color = '#fff';
+    setTimeout(()=>{
+      badge.textContent = 'Avtosaqlash yoqilgan';
+      badge.style.background = '';
+      badge.style.color = '';
+    }, 2000);
+  }
+}
+
+function scheduleAutoSave(){
+  if(!currentReja) return;
+  clearTimeout(autoSaveTimer);
+  autoSaveTimer = setTimeout(autoSave, 2000);
+}
+
+// Har 30 soniyada saqlash
+setInterval(()=>{ if(currentReja) autoSave(); }, 30000);
+
+// Input o'zgarganda avtosaqlash rejalashtirilsin
+document.addEventListener('input', function(e){
+  if(e.target.closest('#page-jadval')) scheduleAutoSave();
+});
+
+// ─── MAVSUMIY ────────────────────────────────────────────
+let mavSemestr = 'kuzgi';
+let mavTalim = 'Kunduzgi';
+let talabalarBazasi = []; // XLSX dan yuklangan
+
+function setSemestr(type){
+  mavSemestr = type;
+  document.getElementById('btn-kuzgi').style.background = type==='kuzgi' ? 'var(--primary)' : '#fff';
+  document.getElementById('btn-kuzgi').style.color = type==='kuzgi' ? '#fff' : 'var(--text-muted)';
+  document.getElementById('btn-kuzgi').style.fontWeight = type==='kuzgi' ? '600' : '500';
+  document.getElementById('btn-bahorgi').style.background = type==='bahorgi' ? 'var(--primary)' : '#fff';
+  document.getElementById('btn-bahorgi').style.color = type==='bahorgi' ? '#fff' : 'var(--text-muted)';
+  document.getElementById('btn-bahorgi').style.fontWeight = type==='bahorgi' ? '600' : '500';
+  loadMavsumiy();
+}
+
+// Ta'lim turi tugmalari
+document.addEventListener('click', function(e){
+  const btn = e.target.closest('.talim-btn');
+  if(!btn) return;
+  mavTalim = btn.dataset.talim;
+  document.querySelectorAll('.talim-btn').forEach(b=>{
+    b.style.background = b.dataset.talim===mavTalim ? 'var(--primary)' : '#fff';
+    b.style.color = b.dataset.talim===mavTalim ? '#fff' : 'var(--text-muted)';
+    b.style.fontWeight = b.dataset.talim===mavTalim ? '600' : '500';
+  });
+  loadMavsumiy();
+});
+
+// Guruh yilidan kurs hisoblash
+function getKurs(guruhNomi, oquvYili){
+  // Guruh nomi: "1-25 IQT" → yil = 25 → 2025
+  const match = guruhNomi.match(/\d+-(\d{2})/);
+  if(!match) return null;
+  const kirganYil = 2000 + parseInt(match[1]);
+  const oquvYilBoshi = parseInt(oquvYili.split('-')[0]);
+  return oquvYilBoshi - kirganYil + 1;
+}
+
+// Semestr raqamini hisoblash
+function getSemestrRaqam(kurs, semestrTuri){
+  // Kuzgi = toq semestr, Bahorgi = juft semestr
+  const base = (kurs - 1) * 2 + 1;
+  return semestrTuri === 'kuzgi' ? base : base + 1;
+}
+
+// Haftalik yuklama hisoblash
+function haftalikYuklama(jamiAud){
+  const raw = jamiAud / 15;
+  const ceil = Math.ceil(raw);
+  return ceil % 2 === 0 ? ceil : ceil + 1;
+}
+
+// O'quv rejadan fanlarni olish
+function getFanlarFromReja(oquvYili, talimTuri, semestrNum){
+  const reja = rejalar.find(r => r.year === oquvYili && r.talim === talimTuri);
+  if(!reja || !reja.data) return [];
+  const td = reja.data['talim_' + talimTuri];
+  if(!td) return [];
+
+  const sKey = 'k' + semestrNum;
+  const fanlar = [];
+
+  // Majburiy fanlar
+  (td.majburiy||[]).forEach(fan => {
+    if(fan[sKey] && fan[sKey] > 0){
+      fanlar.push({...fan, tur:'Majburiy', kredit: fan[sKey]});
+    }
+  });
+
+  // Tanlov fanlar
+  (td.tanlov||[]).forEach(fan => {
+    if(fan[sKey] && fan[sKey] > 0){
+      fanlar.push({...fan, tur:'Tanlov', kredit: fan[sKey]});
+    }
+  });
+
+  return fanlar;
+}
+
+// Guruhlarni tayyorlash
+function getGuruhlar(oquvYili, talimTuri){
+  // Talabalar bazasidan yoki demo data
+  const guruhlar = [];
+  const yilBoshi = parseInt(oquvYili.split('-')[0]);
+
+  if(talabalarBazasi.length > 0){
+    // XLSX dan
+    const seen = {};
+    talabalarBazasi.forEach(t => {
+      if(!t.guruh) return;
+      const k = getKurs(t.guruh, oquvYili);
+      if(!k || k < 1 || k > 8) return;
+      if(!seen[t.guruh]){
+        seen[t.guruh] = {nomi: t.guruh, talabaSoni: 0, kurs: k};
+        guruhlar.push(seen[t.guruh]);
+      }
+      seen[t.guruh].talabaSoni++;
+    });
+  } else {
+    // Demo
+    return [{nomi: 'Demo guruh', talabaSoni: 25, kurs: 1}];
+  }
+
+  return guruhlar.sort((a,b) => a.nomi.localeCompare(b.nomi));
+}
+
+window.loadMavsumiy = function loadMavsumiy(){
+  const oquvYiliRaw = document.getElementById('mav-year')?.value;
+  if(!oquvYiliRaw) return;
+  // '2024-2025' → '2024–2025' (em dash)
+  const oquvYili = oquvYiliRaw.replace('-', '–');
+
+  const yilDisplay = oquvYili.replace('-', '–');
+  const thead = document.getElementById('mav-thead');
+  const tbody = document.getElementById('mav-tbody');
+  if(!thead || !tbody) return;
+
+  // Thead
+  thead.innerHTML = `<tr style="background:var(--primary-light)">
+    <th style="padding:9px 8px;font-size:12px;font-weight:700;color:var(--accent);border-bottom:2px solid var(--primary);border-right:1px solid #c5d0da;text-align:center;white-space:nowrap">T/R</th>
+    <th style="padding:9px 8px;font-size:12px;font-weight:700;color:var(--accent);border-bottom:2px solid var(--primary);border-right:1px solid #c5d0da;text-align:left;min-width:220px">Fan nomi</th>
+    <th style="padding:9px 8px;font-size:12px;font-weight:700;color:var(--accent);border-bottom:2px solid var(--primary);border-right:1px solid #c5d0da;text-align:center">Guruh</th>
+    <th style="padding:9px 8px;font-size:12px;font-weight:700;color:var(--accent);border-bottom:2px solid var(--primary);border-right:1px solid #c5d0da;text-align:center">Kurs</th>
+    <th style="padding:9px 8px;font-size:12px;font-weight:700;color:var(--accent);border-bottom:2px solid var(--primary);border-right:1px solid #c5d0da;text-align:center">Semestr</th>
+    <th style="padding:9px 8px;font-size:12px;font-weight:700;color:var(--accent);border-bottom:2px solid var(--primary);border-right:1px solid #c5d0da;text-align:center">Talaba soni</th>
+    <th style="padding:9px 8px;font-size:12px;font-weight:700;color:var(--accent);border-bottom:2px solid var(--primary);border-right:1px solid #c5d0da;text-align:center">Fan turi</th>
+    <th style="padding:9px 8px;font-size:12px;font-weight:700;color:var(--accent);border-bottom:2px solid var(--primary);border-right:1px solid #c5d0da;text-align:center">Umumiy yuklama</th>
+    <th style="padding:9px 8px;font-size:12px;font-weight:700;color:var(--accent);border-bottom:2px solid var(--primary);border-right:1px solid #c5d0da;text-align:center">Jami aud.</th>
+    <th style="padding:9px 8px;font-size:12px;font-weight:700;color:var(--accent);border-bottom:2px solid var(--primary);border-right:1px solid #c5d0da;text-align:center">Ma'ruza</th>
+    <th style="padding:9px 8px;font-size:12px;font-weight:700;color:var(--accent);border-bottom:2px solid var(--primary);border-right:1px solid #c5d0da;text-align:center">Amaliy</th>
+    <th style="padding:9px 8px;font-size:12px;font-weight:700;color:var(--accent);border-bottom:2px solid var(--primary);border-right:1px solid #c5d0da;text-align:center">Lab.</th>
+    <th style="padding:9px 8px;font-size:12px;font-weight:700;color:var(--accent);border-bottom:2px solid var(--primary);border-right:1px solid #c5d0da;text-align:center">Seminar</th>
+    <th style="padding:9px 8px;font-size:12px;font-weight:700;color:var(--accent);border-bottom:2px solid var(--primary);border-right:1px solid #c5d0da;text-align:center">Mustaqil ta'lim</th>
+    <th style="padding:9px 8px;font-size:12px;font-weight:700;color:var(--accent);border-bottom:2px solid var(--primary);border-right:1px solid #c5d0da;text-align:center">Kredit</th>
+    <th style="padding:9px 8px;font-size:12px;font-weight:700;color:var(--accent);border-bottom:2px solid var(--primary);text-align:center">Haftalik</th>
+  </tr>`;
+
+  // Guruhlar
+  const guruhlar = getGuruhlar(oquvYili, mavTalim);
+  let rows = [];
+  let trNum = 1;
+
+  guruhlar.forEach(guruh => {
+    const semestrNum = getSemestrRaqam(guruh.kurs, mavSemestr);
+    const fanlar = getFanlarFromReja(yilDisplay, mavTalim, semestrNum);
+
+    fanlar.forEach(fan => {
+      rows.push({
+        trNum: trNum++,
+        fanNomi: fan.fan_nomi,
+        guruh: guruh.nomi,
+        kurs: guruh.kurs,
+        semestr: semestrNum,
+        talabaSoni: guruh.talabaSoni,
+        tur: fan.tur,
+        uy: fan.uy||0,
+        ja: fan.ja||0,
+        maruza: fan.maruza||0,
+        amaliy: fan.amaliy||0,
+        lab: fan.lab||0,
+        seminar: fan.seminar||0,
+        mt: fan.mt||0,
+        kredit: fan.kredit||0,
+        haftalik: haftalikYuklama(fan.ja||0)
+      });
+    });
+  });
+
+  if(!rows.length){
+    tbody.innerHTML = `<tr><td colspan="16" style="padding:48px;text-align:center;color:var(--text-light);font-size:14px">
+      Bu o'quv yili uchun o'quv reja topilmadi yoki guruhlar yo'q
+    </td></tr>`;
+    return;
+  }
+
+  const td_style = 'padding:8px 8px;border-bottom:1.5px solid #b0bec5;border-right:1px solid #dde3e8;font-size:13px;';
+  tbody.innerHTML = rows.map((r,i) => `<tr style="${i%2===1?'background:#f5f9ff':''}">
+    <td style="${td_style}text-align:center;color:var(--text-muted)">${r.trNum}</td>
+    <td style="${td_style}font-weight:500">${r.fanNomi}</td>
+    <td style="${td_style}text-align:center"><span style="background:var(--primary-light);color:var(--accent);padding:2px 8px;border-radius:20px;font-size:12px;font-weight:600">${r.guruh}</span></td>
+    <td style="${td_style}text-align:center;font-weight:600">${r.kurs}</td>
+    <td style="${td_style}text-align:center;font-weight:600">${r.semestr}</td>
+    <td style="${td_style}text-align:center">${r.talabaSoni}</td>
+    <td style="${td_style}text-align:center"><span style="background:${r.tur==='Majburiy'?'#dbeafe':'#dcfce7'};color:${r.tur==='Majburiy'?'#1e40af':'#166534'};padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600">${r.tur}</span></td>
+    <td style="${td_style}text-align:center;color:#92400e;font-weight:600">${r.uy||''}</td>
+    <td style="${td_style}text-align:center;color:#92400e;font-weight:600">${r.ja||''}</td>
+    <td style="${td_style}text-align:center">${r.maruza||''}</td>
+    <td style="${td_style}text-align:center">${r.amaliy||''}</td>
+    <td style="${td_style}text-align:center">${r.lab||''}</td>
+    <td style="${td_style}text-align:center">${r.seminar||''}</td>
+    <td style="${td_style}text-align:center;color:#92400e;font-weight:600">${r.mt||''}</td>
+    <td style="${td_style}text-align:center;font-weight:700;color:var(--primary)">${r.kredit}</td>
+    <td style="padding:8px;text-align:center;font-size:13px;font-weight:700;color:#166534;background:#dcfce7">${r.haftalik}</td>
+  </tr>`).join('');
+
+  // Info
+  const info = document.getElementById('mav-info');
+  if(info){
+    info.style.display='block';
+    info.innerHTML = `📊 <b>${yilDisplay}</b> | <b>${mavTalim}</b> | <b>${mavSemestr==='kuzgi'?'🍂 Kuzgi':'🌸 Bahorgi'}</b> semestr | Jami: <b>${rows.length}</b> ta yozuv | <b>${guruhlar.length}</b> ta guruh`;
+  }
+}
+
+// XLSX yuklash
+window.loadXLSX = function loadXLSX(input){
+  const file = input.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    try {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, {type:'array'});
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const json = XLSX.utils.sheet_to_json(sheet, {header:1});
+      
+      talabalarBazasi = [];
+      // Sarlavhani topamiz
+      let headerRow = -1;
+      for(let i=0;i<json.length;i++){
+        if(json[i] && json[i].some(c=>String(c||'').toLowerCase().includes('guruh'))){
+          headerRow = i; break;
+        }
+      }
+      
+      if(headerRow < 0){
+        alert('Guruh ustuni topilmadi!'); return;
+      }
+      
+      const headers = json[headerRow].map(h=>String(h||'').toLowerCase());
+      const guruhIdx = headers.findIndex(h=>h.includes('guruh'));
+      const talabaSoniIdx = headers.findIndex(h=>h.includes('talaba') && h.includes('soni'));
+      
+      for(let i=headerRow+1;i<json.length;i++){
+        const row = json[i];
+        if(!row || !row[guruhIdx]) continue;
+        const guruh = String(row[guruhIdx]).trim();
+        if(!guruh || guruh.toLowerCase().includes('jami')) continue;
+        
+        if(talabaSoniIdx >= 0 && row[talabaSoniIdx]){
+          // Guruh rahbari jadvali — har guruh bir qator
+          const soni = parseInt(row[talabaSoniIdx])||0;
+          for(let s=0;s<soni;s++){
+            talabalarBazasi.push({guruh});
+          }
+        } else {
+          talabalarBazasi.push({guruh});
+        }
+      }
+      
+      alert(talabalarBazasi.length + ' ta talaba ma\'lumoti yuklandi!');
+      loadMavsumiy();
+    } catch(err){
+      alert('XLSX o\'qishda xato: ' + err.message);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+// Sidebar toggle — sodda JS
+let sidebarOpen = true;
+window.toggleSidebar = function(){
+  const sidebar = document.querySelector('.sidebar');
+  const main = document.querySelector('.main');
+  const toggleBtn = document.getElementById('sidebar-toggle-btn');
+  sidebarOpen = !sidebarOpen;
+  if(sidebarOpen){
+    sidebar.style.transform = 'translateX(0)';
+    main.style.marginLeft = '260px';
+    if(toggleBtn){ toggleBtn.style.display='none'; }
+  } else {
+    sidebar.style.transform = 'translateX(-280px)';
+    main.style.marginLeft = '0px';
+    if(toggleBtn){ toggleBtn.style.display='flex'; }
+  }
+};
+
+
+window.loadMavsumiy = loadMavsumiy;
+window.loadXLSX = loadXLSX;
+
+// Sidebar tugmalarini bog'laymiz
+document.addEventListener('DOMContentLoaded', function(){
+  const closeBtn = document.getElementById('sidebar-close-btn');
+  const toggleBtn = document.getElementById('sidebar-toggle-btn');
+  if(closeBtn) closeBtn.addEventListener('click', window.toggleSidebar);
+  if(toggleBtn) toggleBtn.addEventListener('click', window.toggleSidebar);
+});
+// Agar DOMContentLoaded o'tib ketgan bo'lsa
+setTimeout(function(){
+  const closeBtn = document.getElementById('sidebar-close-btn');
+  const toggleBtn = document.getElementById('sidebar-toggle-btn');
+  if(closeBtn && !closeBtn._bound){ closeBtn._bound=true; closeBtn.addEventListener('click', window.toggleSidebar); }
+  if(toggleBtn && !toggleBtn._bound){ toggleBtn._bound=true; toggleBtn.addEventListener('click', window.toggleSidebar); }
+}, 300);
+
+renderYearsList();
+}
+
+// ─── PAPKALAR ────────────────────────────────────────────
+function renderYearsList(){
+  const container=document.getElementById('years-list');
+  const byYear={};
+  rejalar.forEach(r=>{if(!byYear[r.year])byYear[r.year]=[];byYear[r.year].push(r);});
+  const years=Object.keys(byYear).sort().reverse();
+
+  if(!years.length){
+    container.innerHTML=`<div class="empty-state">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+      <div style="font-size:13px;font-weight:500;margin-bottom:5px">Hech qanday o'quv reja yo'q</div>
+      <div style="font-size:11px">Yuqoridagi "+" tugmasini bosib yangi o'quv reja yarating</div>
+    </div>`;return;
+  }
+
+  container.innerHTML=years.map(year=>{
+    const list=byYear[year];
+    const types=['Kunduzgi','Sirtqi','Magistratura'];
+    const groups=types.map(talim=>{
+      const items=list.filter(r=>r.talim===talim);
+      if(!items.length)return'';
+      const tagCls={Kunduzgi:'tag-k',Sirtqi:'tag-s',Magistratura:'tag-m'}[talim];
+      return`<div class="talim-group">
+        <div class="talim-label">${talim} — ${items.length} ta</div>
+        <div class="reja-list">${items.map(r=>`
+          <div class="reja-card" onclick="openJadvalById('${r.id}')">
+            <div>
+              <div class="reja-card-name">${r.yonalish}</div>
+              <div class="reja-card-sub">${r.savedAt?'✓ '+r.savedAt:'Yangi · to\'ldirilmagan'}</div>
+            </div>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9,18 15,12 9,6"/></svg>
+          </div>`).join('')}
+        </div>
+      </div>`;
+    }).join('');
+
+    return`<div class="year-card">
+      <div class="year-card-header open" onclick="toggleYear(this)">
+        <div class="year-card-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+          ${year}
+        </div>
+        <div style="display:flex;align-items:center;gap:7px">
+          <span class="year-count">${list.length} ta</span>
+          <svg class="chevron open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6,9 12,15 18,9"/></svg>
+        </div>
+      </div>
+      <div class="year-body open">${groups}</div>
+    </div>`;
+  }).join('');
+}
+
+function toggleYear(h){
+  h.classList.toggle('open');
+  h.nextElementSibling.classList.toggle('open');
+  h.querySelector('.chevron').classList.toggle('open');
+}
+
+// ─── MODAL ───────────────────────────────────────────────
+window.openModal = function(){document.getElementById('modal').classList.add('open');document.getElementById('m-yonalish').focus();}
+window.closeModal = function(){document.getElementById('modal').classList.remove('open');document.getElementById('m-yonalish').value='';}
+window.createReja = function(){
+  const year=document.getElementById('m-year').value;
+  const talim=document.getElementById('m-talim').value;
+  const yonalish=document.getElementById('m-yonalish').value.trim();
+  if(!yonalish){document.getElementById('m-yonalish').focus();return;}
+  const reja={id:Date.now().toString(),year,talim,yonalish,savedAt:null,data:{}};
+  rejalar.push(reja);
+  localStorage.setItem('bxu_akademplatform_rejalar',JSON.stringify(rejalar));
+  rejalar = loadRejalar();
+  closeModal();renderYearsList();openJadvalById(reja.id);
+}
+
+window.showPage = function showPage(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+name)?.classList.add('active');
+  // Nav items
+  document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));
+  document.getElementById('nav-'+name)?.classList.add('active');
+  if(name==='mavsumiy'){
+    // Mavjud o'quv rejalardan yillarni to'ldiramiz
+    const sel = document.getElementById('mav-year');
+    if(sel){
+      const years = [...new Set(rejalar.map(r=>r.year))].sort();
+      const curVal = sel.value;
+      sel.innerHTML = '<option value="">— Tanlang —</option>' +
+        years.map(y=>{
+          const val = y.replace('–','-');
+          return `<option value="${val}" ${val===curVal?'selected':''}>${y}</option>`;
+        }).join('');
+      // Birinchi yilni avtomatik tanlash
+      if(!curVal && years.length){
+        sel.value = years[0].replace('–','-');
+      }
+    }
+    window.loadMavsumiy();
+  }
+}
+
+window.backToList = function(){
+  document.getElementById('breadcrumb').textContent="O'quv reja";
+  document.getElementById('page-title').textContent="O'quv reja";
+  document.getElementById('topbar-badge').textContent="Barcha yillar";
+  const badge2=document.getElementById('autosave-badge');
+  if(badge2) badge2.style.display='none';
+  showPage('oquv');renderYearsList();
+}
+
+document.getElementById('modal').addEventListener('click',function(e){if(e.target===this)closeModal();});
+
+
+document.getElementById('m-yonalish').addEventListener('keydown',function(e){if(e.key==='Enter')createReja();});
+
+// ─── EXCEL USLUBI: KLAVIATURA NAVIGATSIYASI ─────────────
+document.addEventListener('keydown', function(e){
+  const active = document.activeElement;
+  if(!active || (active.tagName!=='INPUT')) return;
+  const td = active.closest('td');
+  if(!td) return;
+  const tr = td.closest('tr');
+  const tbody = tr.closest('tbody');
+  if(!tbody) return;
+
+  const allTds = [...tr.querySelectorAll('td')];
+  const allTrs = [...tbody.querySelectorAll('tr')];
+  const colIdx = allTds.indexOf(td);
+  const rowIdx = allTrs.indexOf(tr);
+  let nextTd = null;
+
+  if(e.key==='Tab'||e.key==='ArrowRight'){
+    e.preventDefault();
+    for(let i=colIdx+1;i<allTds.length;i++){const inp=allTds[i].querySelector('input');if(inp){nextTd=allTds[i];break;}}
+    if(!nextTd && rowIdx+1<allTrs.length){const ntr=allTrs[rowIdx+1];for(let t of ntr.querySelectorAll('td')){if(t.querySelector('input')){nextTd=t;break;}}}
+  } else if((e.shiftKey&&e.key==='Tab')||e.key==='ArrowLeft'){
+    e.preventDefault();
+    for(let i=colIdx-1;i>=0;i--){const inp=allTds[i].querySelector('input');if(inp){nextTd=allTds[i];break;}}
+    if(!nextTd && rowIdx-1>=0){const ptr=allTrs[rowIdx-1];const ptds=[...ptr.querySelectorAll('td')];for(let i=ptds.length-1;i>=0;i--){if(ptds[i].querySelector('input')){nextTd=ptds[i];break;}}}
+  } else if(e.key==='ArrowDown'||e.key==='Enter'){
+    e.preventDefault();
+    if(rowIdx+1<allTrs.length){const ntr=allTrs[rowIdx+1];const ntds=[...ntr.querySelectorAll('td')];if(ntds[colIdx]&&ntds[colIdx].querySelector('input'))nextTd=ntds[colIdx];}
+  } else if(e.key==='ArrowUp'){
+    e.preventDefault();
+    if(rowIdx-1>=0){const ptr=allTrs[rowIdx-1];const ptds=[...ptr.querySelectorAll('td')];if(ptds[colIdx]&&ptds[colIdx].querySelector('input'))nextTd=ptds[colIdx];}
+  }
+
+  if(nextTd){const inp=nextTd.querySelector('input');if(inp){inp.focus();inp.select();}}
+});
+
+document.addEventListener('focusin',function(e){
+  if(e.target.tagName==='INPUT'&&e.target.type==='number'){
+    if(e.target.value==='0') e.target.value='';
+    e.target.select();
+  }
+});
+
+// blur da ham 0 ni bo'shatamiz
+document.addEventListener('focusout',function(e){
+  if(e.target.tagName==='INPUT'&&e.target.type==='number'){
+    if(e.target.value==='0') e.target.value='';
+  }
+});
+
+// ─── EXCEL: KO'P KATAK TANLASH ───────────────────────────
+function updateStatusBar(){
+  const vals = [...selInputs].map(i=>parseFloat(i.value)||0);
+  if(!vals.length){ hideStatusBar(); return; }
+  const sum = vals.reduce((a,b)=>a+b,0);
+  const avg = sum/vals.length;
+  const min = Math.min(...vals);
+  const max = Math.max(...vals);
+  const bar = document.getElementById('status-bar');
+  bar.style.display='flex';
+  document.getElementById('sb-count').textContent = vals.length+' ta katak';
+  document.getElementById('sb-sum').textContent = sum;
+  document.getElementById('sb-avg').textContent = avg%1===0?avg:avg.toFixed(1);
+  document.getElementById('sb-min').textContent = min;
+  document.getElementById('sb-max').textContent = max;
+  document.querySelector('.content').style.paddingBottom='52px';
+}
+
+function hideStatusBar(){
+  const bar = document.getElementById('status-bar');
+  if(bar) bar.style.display='none';
+  const c = document.querySelector('.content');
+  if(c) c.style.paddingBottom='20px';
+}
+
+function clearSelection(){
+  selInputs.forEach(i=>i.classList.remove('selected'));
+  selInputs.clear();
+  selStart=null;
+  hideStatusBar();
+}
+
+function selectRange(a, b){
+  const allInps=[...document.querySelectorAll('#page-jadval input[type=number]')];
+  const i1=allInps.indexOf(a), i2=allInps.indexOf(b);
+  if(i1<0||i2<0) return;
+  const from=Math.min(i1,i2), to=Math.max(i1,i2);
+  clearSelection();
+  for(let i=from;i<=to;i++){
+    selInputs.add(allInps[i]);
+    allInps[i].classList.add('selected');
+  }
+  updateStatusBar();
+}
+
+
+
+// Esc — tozalash
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape') clearSelection();
+});
+
+// ─── TANLASH TIZIMI ──────────────────────────────────────
+(function(){
+  let anchor = null;
+  let selected = new Set();
+  let pressing = false;
+
+  function allCells(){
+    return [...document.querySelectorAll('#page-jadval td.num-td')];
+  }
+
+  function getInp(td){
+    return td.querySelector('input[type=number]');
+  }
+
+  function highlight(td, on){
+    if(on){ td.style.background='#cfe8fc'; td.style.outline='2px solid #1a73e8'; td.style.outlineOffset='-2px'; }
+    else { td.style.background=''; td.style.outline=''; td.style.outlineOffset=''; }
+  }
+
+  function clearAll(){
+    selected.forEach(td=>highlight(td,false));
+    selected.clear();
+    anchor=null;
+    hideBar();
+  }
+
+  function getColIndex(td){
+    // TD ning ustun indeksini topish
+    const tr=td.parentElement;
+    return [...tr.children].indexOf(td);
+  }
+
+  function addRange(from, to){
+    const col=getColIndex(from);
+    // Faqat bir xil ustundagi TD larni olamiz
+    const all=allCells().filter(td=>getColIndex(td)===col);
+    const a=all.indexOf(from), b=all.indexOf(to);
+    if(a<0||b<0) return;
+    selected.forEach(td=>highlight(td,false));
+    selected.clear();
+    for(let i=Math.min(a,b);i<=Math.max(a,b);i++){
+      selected.add(all[i]);
+      highlight(all[i],true);
+    }
+    showBar();
+  }
+
+  function showBar(){
+    const vals=[...selected].map(td=>parseFloat(getInp(td)?.value)||0);
+    if(!vals.length){hideBar();return;}
+    const sum=vals.reduce((a,b)=>a+b,0);
+    const avg=vals.length?sum/vals.length:0;
+    const bar=document.getElementById('status-bar');
+    if(!bar) return;
+    bar.style.display='flex';
+    document.getElementById('sb-count').textContent=vals.length+' ta katak';
+    document.getElementById('sb-sum').textContent=sum;
+    document.getElementById('sb-avg').textContent=Number.isInteger(avg)?avg:avg.toFixed(1);
+    document.getElementById('sb-min').textContent=Math.min(...vals);
+    document.getElementById('sb-max').textContent=Math.max(...vals);
+    document.querySelector('.content').style.paddingBottom='52px';
+  }
+
+  function hideBar(){
+    const bar=document.getElementById('status-bar');
+    if(bar) bar.style.display='none';
+    const c=document.querySelector('.content');
+    if(c) c.style.paddingBottom='20px';
+  }
+
+  // Tashqariga qo'yish uchun global clearSelection
+  window.clearSelection = clearAll;
+  window.updateStatusBar = showBar;
+
+  document.addEventListener('mousedown', function(e){
+    const td = e.target.closest('td.num-td');
+    const isInp = e.target.tagName==='INPUT' || e.target.tagName==='TEXTAREA';
+
+    if(!td){
+      if(!e.target.closest('#status-bar')) clearAll();
+      return;
+    }
+
+    // Input ga to'g'ridan bosish — tanlash yo'q, faqat tahrirlash
+    if(isInp){
+      if(e.shiftKey && anchor && getColIndex(td)===getColIndex(anchor)){
+        e.preventDefault();
+        addRange(anchor, td);
+      } else if(e.ctrlKey||e.metaKey){
+        e.preventDefault();
+        if(selected.has(td)){ selected.delete(td); highlight(td,false); }
+        else { selected.add(td); highlight(td,true); anchor=td; }
+        showBar();
+      } else {
+        // Oddiy input bosish — tozala, shu TD ni tanlash, input fokus oladi
+        clearAll();
+        anchor=td;
+        selected.add(td);
+        highlight(td,true);
+        showBar();
+        // pressing=false — drag ishlamaydi
+      }
+      return;
+    }
+
+    // TD ga (input emas) bosish — drag boshlash
+    if(e.shiftKey && anchor){
+      e.preventDefault();
+      if(getColIndex(td)===getColIndex(anchor)) addRange(anchor, td);
+      return;
+    }
+    if(e.ctrlKey||e.metaKey){
+      e.preventDefault();
+      if(selected.has(td)){ selected.delete(td); highlight(td,false); }
+      else { selected.add(td); highlight(td,true); anchor=td; }
+      showBar();
+      return;
+    }
+
+    pressing=true;
+    clearAll();
+    anchor=td;
+    selected.add(td);
+    highlight(td,true);
+    showBar();
+  });
+
+    document.addEventListener('mousemove', function(e){
+    if(!pressing||!anchor) return;
+    const el=document.elementFromPoint(e.clientX,e.clientY);
+    if(!el) return;
+    const td=el.closest('td.num-td');
+    // Faqat bir xil ustun
+    if(td && getColIndex(td)===getColIndex(anchor)) addRange(anchor,td);
+  });
+
+  document.addEventListener('mouseup', function(){
+    pressing=false;
+  });
+
+  // Esc
+  document.addEventListener('keydown', function(e){
+    if(e.key==='Escape') clearAll();
+  });
+})();
+
+renderYearsList();
+</script>
+<script>
+// Agar mobil brauzerda ochilsa Chrome da ochish taklif qilinsin
+(function(){
+  const isAndroid = /Android/i.test(navigator.userAgent);
+  const isChrome = /Chrome/i.test(navigator.userAgent);
+  const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+  
+  if(isMobile && !isChrome){
+    const bar = document.createElement('div');
+    bar.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#0c2340;color:#fff;padding:14px 20px;z-index:9999;display:flex;align-items:center;justify-content:space-between;gap:12px;box-shadow:0 -4px 16px rgba(0,0,0,0.3)';
+    bar.innerHTML = `
+      <div style="font-size:13px;line-height:1.4">
+        <div style="font-weight:600;margin-bottom:2px">Chrome da ochish tavsiya etiladi</div>
+        <div style="opacity:0.7;font-size:11px">To'liq imkoniyatlar uchun</div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button onclick="this.closest('div[style]').remove()" style="padding:8px 14px;background:rgba(255,255,255,0.15);border:none;border-radius:8px;color:#fff;font-size:12px;cursor:pointer">Yopish</button>
+        <a href="intent://${location.href.replace('file:///','')}#Intent;scheme=file;package=com.android.chrome;end" style="padding:8px 14px;background:#0ea5e9;border-radius:8px;color:#fff;font-size:12px;font-weight:600;text-decoration:none;display:flex;align-items:center;gap:6px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          Chrome
+        </a>
+      </div>
+    `;
+    document.body.appendChild(bar);
+  }
+})();
+</script>
+</body>
+</html>
